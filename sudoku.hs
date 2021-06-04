@@ -1,5 +1,6 @@
 import qualified Data.List as List
 import qualified Data.Set as Set
+import Data.Char (digitToInt)
 
 group :: Int -> [a] -> [[a]]
 group _ [] = []
@@ -58,3 +59,25 @@ from1dInd s i = [div i s, rem i s]
 
 from1dInd9 :: Int -> [Int]
 from1dInd9 = from1dInd sudokuSize
+
+loadCell :: Char -> [Int]
+loadCell c
+    | c == '.' = [1..9]
+    | otherwise = [(digitToInt c)]
+
+loadPuzzle :: Foldable t => t [Char] -> [[Int]]
+loadPuzzle p = map loadCell (concat p)
+
+
+level5_hs_20200619 = [
+  "2......91",
+  ".46..2...",
+  "..1..7.3.",
+  ".....9.7.",
+  ".95...28.",
+  ".1.8.....", 
+  ".5.1..9..",
+  "...7..52.",
+  "42......7"]
+
+  
