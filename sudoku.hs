@@ -68,6 +68,17 @@ loadCell c
 loadPuzzle :: [Char] -> [[Int]]
 loadPuzzle p = map loadCell p
 
+withNo :: Eq a => a -> [a] -> [a]
+withNo c xs = filter (/=c) xs
+
+singlesRemovalAt :: Eq a => Int -> [[a]] -> [[a]]
+singlesRemovalAt ind cells
+    | length (cells !! ind) > 1 = cells
+    | otherwise =
+        let singleCandidate = head (cells !! ind)
+            removal_inds = intersectingEx ind
+        in [if i `elem` removal_inds then withNo singleCandidate c else c | (c, i) <- zip cells [0..]]
+
 level5_hs_20200619 = 
   "2......91" ++
   ".46..2..." ++
@@ -79,4 +90,3 @@ level5_hs_20200619 =
   "...7..52." ++
   "42......7"
 
-  
