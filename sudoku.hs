@@ -47,6 +47,9 @@ blockIndices c = take9 [i | i <- allIndices, blockOf i == c]
 intersecting :: Int -> [Int]
 intersecting ind = (rowIndices $ rowOf ind) ++ (colIndices $ colOf ind) ++ (blockIndices $ blockOf ind)
 
+intersectingEx :: Int -> [Int]
+intersectingEx ind = filter (/=ind) $ intersecting ind
+
 to1dInd :: Int -> Int -> Int -> Int
 to1dInd s r c = s * r + c
 
