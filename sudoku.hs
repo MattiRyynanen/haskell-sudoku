@@ -71,6 +71,10 @@ loadPuzzle p = map loadCell p
 withNo :: Eq a => a -> [a] -> [a]
 withNo c xs = filter (/=c) xs
 
+removeSingles i cells
+    | i >= length cells = cells
+    | otherwise = removeSingles (succ i) (singlesRemovalAt i cells)
+
 singlesRemovalAt :: Eq a => Int -> [[a]] -> [[a]]
 singlesRemovalAt ind cells
     | length (cells !! ind) > 1 = cells
