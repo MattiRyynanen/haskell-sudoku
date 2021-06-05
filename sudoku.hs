@@ -65,7 +65,7 @@ loadCell c
     | c == '.' = [1..9]
     | otherwise = [(digitToInt c)]
 
-loadPuzzle :: [Char] -> [[Int]]
+loadPuzzle :: String -> [[Int]]
 loadPuzzle p = map loadCell p
 
 withNo :: Eq a => a -> [a] -> [a]
@@ -91,11 +91,19 @@ singlesRemovalAt index cells
             newCells = [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
         in newCells
 
-showCell :: [Int] -> [Char]
+showCell :: [Int] -> String
 showCell c = concat $ [if elem cand c then show cand else "." | cand <- [1..sudokuSize]]
 
-showRow :: [[Int]] -> [Char]
+showRow :: [[Int]] -> String
 showRow cells = intercalate " " (take9 $ map showCell cells)
+
+showPuzzle :: [[Int]] -> String
+showPuzzle cells
+    | null cells = "\n"
+    | otherwise = showRow cells ++ "\n" ++ (showPuzzle (drop 9 cells))
+
+printPuzzle :: [[Int]] -> IO ()
+printPuzzle cells = putStr $ showPuzzle cells
 
 p = loadPuzzle level5_hs_20200619
 
