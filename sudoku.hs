@@ -74,8 +74,12 @@ withNo c xs = filter (/=c) xs
 hasCandidate :: (Foldable t, Eq a) => a -> t a -> Bool
 hasCandidate cand cell = elem cand cell
 
-removeSingles :: Eq a => [[a]] -> [[a]]
-removeSingles cells = removeSinglesStartingAt 0 cells
+removeSingles cells =
+    let rc = removeSinglesStep cells
+    in if rc == cells then cells else removeSingles rc
+
+removeSinglesStep :: Eq a => [[a]] -> [[a]]
+removeSinglesStep cells = removeSinglesStartingAt 0 cells
 
 removeSinglesStartingAt :: Eq a => Int -> [[a]] -> [[a]]
 removeSinglesStartingAt i cells
