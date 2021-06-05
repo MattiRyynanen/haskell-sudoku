@@ -1,4 +1,4 @@
-import qualified Data.List as List
+import Data.List (intercalate)
 import qualified Data.Set as Set
 import Data.Char (digitToInt)
 
@@ -90,6 +90,14 @@ singlesRemovalAt index cells
             removalInds = [i | i <- intersectingEx index, hasCandidate r (cells !! i)]
             newCells = [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
         in newCells
+
+showCell :: [Int] -> [Char]
+showCell c = concat $ [if elem cand c then show cand else "." | cand <- [1..sudokuSize]]
+
+showRow :: [[Int]] -> [Char]
+showRow cells = intercalate " " (take9 $ map showCell cells)
+
+p = loadPuzzle level5_hs_20200619
 
 level5_hs_20200619 = 
   "2......91" ++
