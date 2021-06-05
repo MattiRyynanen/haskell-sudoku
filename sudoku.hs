@@ -95,10 +95,15 @@ singlesRemovalAt index cells
             newCells = [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
         in newCells
 
+withColor c str = "\ESC[" ++ show c ++ "m" ++ str ++ "\ESC[0m"
+
+cellToStr sep c = concat $ [if elem cand c then show cand else sep | cand <- [1..sudokuSize]]
+
 showCell :: [Int] -> String
-showCell c =
-    let sep = if length c == 1 then " " else "."
-    in concat $ [if elem cand c then show cand else sep | cand <- [1..sudokuSize]]
+showCell c
+    | length c == 1 = withColor 32 (cellToStr " " c)
+    | length c == 2 = withColor 33 (cellToStr "." c)
+    | otherwise = cellToStr "." c
 
 showRow :: [[Int]] -> String
 showRow cells = intercalate " " (take9 $ map showCell cells)
