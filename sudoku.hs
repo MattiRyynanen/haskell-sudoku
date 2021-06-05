@@ -71,17 +71,25 @@ loadPuzzle p = map loadCell p
 withNo :: Eq a => a -> [a] -> [a]
 withNo c xs = filter (/=c) xs
 
-removeSingles i cells
+hasCandidate :: (Foldable t, Eq a) => a -> t a -> Bool
+hasCandidate cand cell = elem cand cell
+
+removeSingles :: Eq a => [[a]] -> [[a]]
+removeSingles cells = removeSinglesStartingAt 0 cells
+
+removeSinglesStartingAt :: Eq a => Int -> [[a]] -> [[a]]
+removeSinglesStartingAt i cells
     | i >= length cells = cells
-    | otherwise = removeSingles (succ i) (singlesRemovalAt i cells)
+    | otherwise = removeSinglesStartingAt (succ i) (singlesRemovalAt i cells)
 
 singlesRemovalAt :: Eq a => Int -> [[a]] -> [[a]]
-singlesRemovalAt ind cells
-    | length (cells !! ind) > 1 = cells
+singlesRemovalAt index cells
+    | length (cells !! index) > 1 = cells
     | otherwise =
-        let singleCandidate = head (cells !! ind)
-            removal_inds = intersectingEx ind
-        in [if i `elem` removal_inds then withNo singleCandidate c else c | (c, i) <- zip cells [0..]]
+        let r = head (cells !! index)
+            removalInds = [i | i <- intersectingEx index, hasCandidate r (cells !! i)]
+            newCells = [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
+        in newCells
 
 level5_hs_20200619 = 
   "2......91" ++
