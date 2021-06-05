@@ -96,7 +96,9 @@ singlesRemovalAt index cells
         in newCells
 
 showCell :: [Int] -> String
-showCell c = concat $ [if elem cand c then show cand else "." | cand <- [1..sudokuSize]]
+showCell c =
+    let sep = if length c == 1 then " " else "."
+    in concat $ [if elem cand c then show cand else sep | cand <- [1..sudokuSize]]
 
 showRow :: [[Int]] -> String
 showRow cells = intercalate " " (take9 $ map showCell cells)
