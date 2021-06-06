@@ -112,12 +112,14 @@ getAt :: [Int] -> [a] -> [a]
 getAt = getAt' 0
 
 getAt' :: Int -> [Int] -> [a] -> [a]
-getAt' _ [] _ = []
-getAt' _ _ [] = []
-getAt' previousIndex indices items =
-    let index = head indices
-        remaining = drop (index - previousIndex) items
-    in head remaining : getAt' index (tail indices) remaining
+getAt' previousIndex indices items
+    | null indices = []
+    | null items = []
+    | previousIndex > head indices = error $ concat ["Indices array needs to be in ascending order. ", show previousIndex, " > ", show (head indices)]
+    | otherwise =
+        let index = head indices
+            remaining = drop (index - previousIndex) items
+        in head remaining : getAt' index (tail indices) remaining
 
 
 onlyOnCol index cand cells =
