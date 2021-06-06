@@ -22,6 +22,12 @@ sudokuNumber c
 take9 :: [a] -> [a]
 take9 = take sudokuSize
 
+count :: (a -> Bool) -> [a] -> Int
+count pred = length . filter pred
+
+countEq :: Eq a => a -> [a] -> Int
+countEq n = count (==n)
+
 rowIndices :: Int -> [Int]
 rowIndices r = take9 [(sudokuSize * r)..]
 
@@ -74,6 +80,7 @@ withNo c xs = filter (/=c) xs
 hasCandidate :: (Foldable t, Eq a) => a -> t a -> Bool
 hasCandidate cand cell = elem cand cell
 
+removeSingles :: Eq a => [[a]] -> [[a]]
 removeSingles cells =
     let rc = removeSinglesStep cells
     in if rc == cells then cells else removeSingles rc
@@ -95,8 +102,16 @@ singlesRemovalAt index cells
             newCells = [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
         in newCells
 
+onlyPossibleAt index cand cells =
+    let rs = withNo index (rowIndices $ rowOf index)
+        cell = cells !! index
+        rc = [cells !! i | i <- rs]
+    in [c | c <- rc, hasCandidate cand c]
+
+withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = "\ESC[" ++ show c ++ "m" ++ str ++ "\ESC[0m"
 
+cellToStr :: Foldable t => [Char] -> t Int -> [Char]
 cellToStr sep c = concat $ [if elem cand c then show cand else sep | cand <- [1..sudokuSize]]
 
 showCell :: [Int] -> String
