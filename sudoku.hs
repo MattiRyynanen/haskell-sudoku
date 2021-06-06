@@ -108,6 +108,22 @@ onlyPossibleAt index cand cells =
         rc = [cells !! i | i <- rs]
     in [c | c <- rc, hasCandidate cand c]
 
+getAt :: [Int] -> [a] -> [a]
+getAt = getAt' 0
+
+getAt' :: Int -> [Int] -> [a] -> [a]
+getAt' _ [] _ = []
+getAt' _ _ [] = []
+getAt' previousIndex indices items =
+    let index = head indices
+        remaining = drop (index - previousIndex) items
+    in head remaining : getAt' index (tail indices) remaining
+
+
+onlyOnCol index cand cells =
+    let cell = cells !! index
+    in count (==cand) $ concat [cells !! i | i <- colIndices (colOf index)]
+
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = "\ESC[" ++ show c ++ "m" ++ str ++ "\ESC[0m"
 
@@ -132,6 +148,7 @@ printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStr $ showPuzzle cells
 
 p = loadPuzzle level5_hs_20200619
+p1 = removeSingles p
 
 level5_hs_20200619 = 
   "2......91" ++
