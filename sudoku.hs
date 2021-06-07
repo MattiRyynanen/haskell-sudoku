@@ -101,6 +101,12 @@ singlesRemovalAt index cells
             removalInds = [i | i <- intersectingEx index, hasCandidate r (cells !! i)]
         in [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
 
+applyWhenIndex :: (Int -> Bool) -> (a -> a) -> [a] -> [a]
+applyWhenIndex indexPred f xs = [if indexPred i then f x else x | (x, i) <- zip xs [0..]]
+
+applyAt :: Int -> (a -> a) -> [a] -> [a]
+applyAt index f xs = applyWhenIndex (==index) f xs
+
 onlyPossibleAt index cand cells =
     let rs = withNo index (rowIndices $ rowOf index)
         cell = cells !! index
