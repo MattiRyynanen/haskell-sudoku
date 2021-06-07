@@ -99,8 +99,7 @@ singlesRemovalAt index cells
     | otherwise =
         let r = head (cells !! index)
             removalInds = [i | i <- intersectingEx index, hasCandidate r (cells !! i)]
-            newCells = [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
-        in newCells
+        in [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
 
 onlyPossibleAt index cand cells =
     let rs = withNo index (rowIndices $ rowOf index)
