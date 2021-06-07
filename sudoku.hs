@@ -120,10 +120,13 @@ getAt' previousIndex indices items
             remaining = drop (index - previousIndex) items
         in head remaining : getAt' index (tail indices) remaining
 
+countCandidates :: Int -> [Int] -> [[Int]] -> Int
+countCandidates cand indices cells = count (==cand) $ concat (getAt indices cells)
 
 onlyOnCol index cand cells =
     let cell = cells !! index
-    in count (==cand) $ concat [cells !! i | i <- colIndices (colOf index)]
+        colIndexSet = colIndices (colOf index)
+    in count (==cand) $ concat (getAt colIndexSet cells)
 
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = "\ESC[" ++ show c ++ "m" ++ str ++ "\ESC[0m"
