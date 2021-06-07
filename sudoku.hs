@@ -48,11 +48,20 @@ blockOf ind =
     let b_rc = map blockIndex (from1dInd9 ind)
     in to1dInd blocksLen (head b_rc) (last b_rc)
 
+colIndicesAt :: Int -> [Int]
+colIndicesAt = colIndices . colOf
+
+rowIndicesAt :: Int -> [Int]
+rowIndicesAt = rowIndices . rowOf
+
+blockIndicesAt :: Int -> [Int]
+blockIndicesAt = blockIndices . blockOf
+
 blockIndices :: Int -> [Int]
 blockIndices c = take9 [i | i <- allIndices, blockOf i == c]
 
 intersecting :: Int -> [Int]
-intersecting ind = (rowIndices $ rowOf ind) ++ (colIndices $ colOf ind) ++ (blockIndices $ blockOf ind)
+intersecting ind = concat $ map ($ind) [rowIndicesAt, colIndicesAt, blockIndicesAt]
 
 intersectingEx :: Int -> [Int]
 intersectingEx ind = filter (/=ind) $ intersecting ind
@@ -107,11 +116,17 @@ applyWhenIndex indexPred f xs = [if indexPred i then f x else x | (x, i) <- zip 
 applyAt :: Int -> (a -> a) -> [a] -> [a]
 applyAt index f xs = applyWhenIndex (==index) f xs
 
-onlyPossibleAt index cand cells =
-    let rs = withNo index (rowIndices $ rowOf index)
-        cell = cells !! index
-        rc = [cells !! i | i <- rs]
-    in [c | c <- rc, hasCandidate cand c]
+onlyPossibilityAt index cand cells
+    | length cell == 1 = cells
+    | not $ cand `elem` cell = error "No candidate in cell."
+    | (oneWithin rs || oneWithin cs || oneWithin bs) = applyAt index (\_ -> [cand]) cells
+    | otherwise = cells
+    where oneWithin indx = (countCandidates cand indx cells) == 1
+          rs = rowIndicesAt index
+          cs = colIndicesAt index
+          bs = blockIndicesAt index
+          cell = cells !! index
+
 
 getAt :: [Int] -> [a] -> [a]
 getAt = getAt' 0
