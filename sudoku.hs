@@ -116,15 +116,29 @@ applyWhenIndex indexPred f xs = [if indexPred i then f x else x | (x, i) <- zip 
 applyAt :: Int -> (a -> a) -> [a] -> [a]
 applyAt index f xs = applyWhenIndex (==index) f xs
 
-onlyPossibilityAt :: Int -> Int -> [[Int]] -> [[Int]]
-onlyPossibilityAt index cand cells
-    | length cell == 1 = cells
-    | not $ cand `elem` cell = error "No candidate in cell."
+onlyPossibilities :: [[Int]] -> [[Int]]
+onlyPossibilities cells = applyWhileReduced (removeSingles . onlyPossibilitiesStartingAt 0) cells
+
+applyWhileReduced :: Eq t => (t -> t) -> t -> t
+applyWhileReduced f cells =
+    let reduced = f cells
+    in if reduced == cells then cells else f reduced
+
+onlyPossibilitiesStartingAt i cells
+    | i >= length cells = cells
+    | otherwise = onlyPossibilitiesStartingAt (succ i) (onlyPossibilityAt i cells)
+
+onlyPossibilityAt :: Int -> [[Int]] -> [[Int]]
+onlyPossibilityAt index cells = onlyPossibilityAt' index (cells !! index) cells
+
+onlyPossibilityAt' :: Int -> [Int] -> [[Int]] -> [[Int]]
+onlyPossibilityAt' index cands cells
+    | null cands = cells
     | any (==True) (map oneWithin indexSets) = applyAt index (\_ -> [cand]) cells
-    | otherwise = cells
+    | otherwise = onlyPossibilityAt' index (tail cands) cells
     where oneWithin indx = (countCandidates cand indx cells) == 1
           indexSets = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
-          cell = cells !! index
+          cand = head cands
 
 getAt :: [Int] -> [a] -> [a]
 getAt = getAt' 0
@@ -172,6 +186,7 @@ printPuzzle cells = putStr $ showPuzzle cells
 
 p = loadPuzzle level5_hs_20200619
 p1 = removeSingles p
+p2 = onlyPossibilities p1
 
 level5_hs_20200619 = 
   "2......91" ++
