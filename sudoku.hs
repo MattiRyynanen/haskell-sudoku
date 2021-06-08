@@ -90,9 +90,7 @@ hasCandidate :: (Foldable t, Eq a) => a -> t a -> Bool
 hasCandidate cand cell = elem cand cell
 
 removeSingles :: Eq a => [[a]] -> [[a]]
-removeSingles cells =
-    let rc = removeSinglesStep cells
-    in if rc == cells then cells else removeSingles rc
+removeSingles cells = applyWhileReduced removeSinglesStep cells
 
 removeSinglesStep :: Eq a => [[a]] -> [[a]]
 removeSinglesStep cells = removeSinglesStartingAt 0 cells
@@ -122,7 +120,7 @@ onlyPossibilities cells = applyWhileReduced (removeSingles . onlyPossibilitiesSt
 applyWhileReduced :: Eq t => (t -> t) -> t -> t
 applyWhileReduced f cells =
     let reduced = f cells
-    in if reduced == cells then cells else f reduced
+    in if reduced == cells then cells else applyWhileReduced f reduced
 
 onlyPossibilitiesStartingAt i cells
     | i >= length cells = cells
