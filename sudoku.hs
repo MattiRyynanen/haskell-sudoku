@@ -116,17 +116,15 @@ applyWhenIndex indexPred f xs = [if indexPred i then f x else x | (x, i) <- zip 
 applyAt :: Int -> (a -> a) -> [a] -> [a]
 applyAt index f xs = applyWhenIndex (==index) f xs
 
+onlyPossibilityAt :: Int -> Int -> [[Int]] -> [[Int]]
 onlyPossibilityAt index cand cells
     | length cell == 1 = cells
     | not $ cand `elem` cell = error "No candidate in cell."
-    | (oneWithin rs || oneWithin cs || oneWithin bs) = applyAt index (\_ -> [cand]) cells
+    | any (==True) (map oneWithin indexSets) = applyAt index (\_ -> [cand]) cells
     | otherwise = cells
     where oneWithin indx = (countCandidates cand indx cells) == 1
-          rs = rowIndicesAt index
-          cs = colIndicesAt index
-          bs = blockIndicesAt index
+          indexSets = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
           cell = cells !! index
-
 
 getAt :: [Int] -> [a] -> [a]
 getAt = getAt' 0
