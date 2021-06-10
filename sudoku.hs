@@ -2,31 +2,15 @@ import Data.List (intercalate)
 import qualified Data.Set as Set
 import Data.Char (digitToInt)
 
-group :: Int -> [a] -> [[a]]
-group _ [] = []
-group n l
-    | n > 0 = (take n l) : (group n (drop n l))
-    | otherwise = error "Negative or zero n"
-
-s = group 9 [0..80]
-
 sudokuSize = 9
 blocksLen = 3
 allIndices = [0..pred (sudokuSize * sudokuSize)]
-
-sudokuNumber :: Int -> Int
-sudokuNumber c 
-    | (c >= 1 && c <= sudokuSize) = c
-    | otherwise = error $ "Sudoku number needs to be in range [1, " ++ show sudokuSize ++ "]"
 
 take9 :: [a] -> [a]
 take9 = take sudokuSize
 
 count :: (a -> Bool) -> [a] -> Int
 count pred = length . filter pred
-
-countEq :: Eq a => a -> [a] -> Int
-countEq n = count (==n)
 
 rowIndices :: Int -> [Int]
 rowIndices r = take9 [(sudokuSize * r)..]
@@ -153,11 +137,6 @@ getAt' previousIndex indices items
 
 countCandidates :: Int -> [Int] -> [[Int]] -> Int
 countCandidates cand indices cells = count (==cand) $ concat (getAt indices cells)
-
-onlyOnCol index cand cells =
-    let cell = cells !! index
-        colIndexSet = colIndices (colOf index)
-    in count (==cand) $ concat (getAt colIndexSet cells)
 
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = "\ESC[" ++ show c ++ "m" ++ str ++ "\ESC[0m"
