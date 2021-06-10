@@ -2,35 +2,37 @@ import Data.List (intercalate)
 import qualified Data.Set as Set
 import Data.Char (digitToInt)
 
-sudokuSize = 9
-blocksLen = 3
-allIndices = [0..pred (sudokuSize * sudokuSize)]
+nine = 9
+three = 3
+numCells = nine * nine
+allIndices = [0..pred numCells]
 
 take9 :: [a] -> [a]
-take9 = take sudokuSize
+take9 = take nine
 
 count :: (a -> Bool) -> [a] -> Int
 count pred = length . filter pred
 
 rowIndices :: Int -> [Int]
-rowIndices r = take9 [(sudokuSize * r)..]
+rowIndices r = take9 [nine * r..]
 
 colIndices :: Int -> [Int]
-colIndices c = take9 [c, (c + sudokuSize)..]
+colIndices c = take9 [c, (c + nine)..]
 
-blockIndex :: Int -> Int
-blockIndex n = div n blocksLen
+blockIndices :: Int -> [Int]
+blockIndices c = take9 [i | i <- allIndices, blockOf i == c]
 
 rowOf :: Int -> Int
-rowOf ind = head $ from1dInd9 ind
+rowOf ind = div ind nine
 
 colOf :: Int -> Int
-colOf ind = last $ from1dInd9 ind
+colOf ind = rem ind nine
 
 blockOf :: Int -> Int
-blockOf ind = 
-    let b_rc = map blockIndex (from1dInd9 ind)
-    in to1dInd blocksLen (head b_rc) (last b_rc)
+blockOf ind =
+    let r = div (rowOf ind) three
+        c = div (colOf ind) three
+    in three * r + c
 
 colIndicesAt :: Int -> [Int]
 colIndicesAt = colIndices . colOf
@@ -41,34 +43,17 @@ rowIndicesAt = rowIndices . rowOf
 blockIndicesAt :: Int -> [Int]
 blockIndicesAt = blockIndices . blockOf
 
-blockIndices :: Int -> [Int]
-blockIndices c = take9 [i | i <- allIndices, blockOf i == c]
-
 intersecting :: Int -> [Int]
 intersecting ind = concat $ map ($ind) [rowIndicesAt, colIndicesAt, blockIndicesAt]
 
 intersectingEx :: Int -> [Int]
-intersectingEx ind = filter (/=ind) $ intersecting ind
-
-to1dInd :: Int -> Int -> Int -> Int
-to1dInd s r c = s * r + c
-
-from1dInd :: Integral b => b -> b -> [b]
-from1dInd s i = [div i s, rem i s]
-
-from1dInd9 :: Int -> [Int]
-from1dInd9 = from1dInd sudokuSize
-
-loadCell :: Char -> [Int]
-loadCell c
-    | c == '.' = [1..9]
-    | otherwise = [(digitToInt c)]
+intersectingEx ind = withNo ind $ intersecting ind
 
 loadPuzzle :: String -> [[Int]]
-loadPuzzle p = map loadCell p
+loadPuzzle = map loadCell where loadCell c = if c == '.' then [1..nine] else [(digitToInt c)]
 
 withNo :: Eq a => a -> [a] -> [a]
-withNo c xs = filter (/=c) xs
+withNo c = filter (/=c)
 
 hasCandidate :: (Foldable t, Eq a) => a -> t a -> Bool
 hasCandidate cand cell = elem cand cell
@@ -139,10 +124,10 @@ countCandidates :: Int -> [Int] -> [[Int]] -> Int
 countCandidates cand indices cells = count (==cand) $ concat (getAt indices cells)
 
 withColor :: Show a => a -> [Char] -> [Char]
-withColor c str = "\ESC[" ++ show c ++ "m" ++ str ++ "\ESC[0m"
+withColor c str = concat ["\ESC[", show c, "m", str, "\ESC[0m"]
 
 cellToStr :: Foldable t => [Char] -> t Int -> [Char]
-cellToStr sep c = concat $ [if elem cand c then show cand else sep | cand <- [1..sudokuSize]]
+cellToStr sep c = concat $ [if elem cand c then show cand else sep | cand <- [1..nine]]
 
 showCell :: [Int] -> String
 showCell c
@@ -151,12 +136,12 @@ showCell c
     | otherwise = cellToStr "." c
 
 showRow :: [[Int]] -> String
-showRow cells = intercalate " " (take9 $ map showCell cells)
+showRow = intercalate "|" . take9 . map showCell
 
 showPuzzle :: [[Int]] -> String
 showPuzzle cells
     | null cells = "\n"
-    | otherwise = showRow cells ++ "\n" ++ (showPuzzle (drop 9 cells))
+    | otherwise = showRow cells ++ "\n" ++ (showPuzzle (drop nine cells))
 
 printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStr $ showPuzzle cells
@@ -175,4 +160,3 @@ level5_hs_20200619 =
   ".5.1..9.." ++
   "...7..52." ++
   "42......7"
-
