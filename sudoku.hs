@@ -55,27 +55,17 @@ loadPuzzle = map loadCell where loadCell c = if c == '.' then [1..nine] else [(d
 withNo :: Eq a => a -> [a] -> [a]
 withNo c = filter (/=c)
 
-hasCandidate :: (Foldable t, Eq a) => a -> t a -> Bool
-hasCandidate cand cell = elem cand cell
+singlesRemovalAt :: Eq a => [[a]] -> Int -> [[a]]
+singlesRemovalAt cells index
+    | length cell > 1 = cells -- no single candidate
+    | otherwise = applyWhenIndex (\i -> elem i intersectingIndices) removal cells
+    where cell = cells !! index
+          removal = withNo $ head cell
+          intersectingIndices = intersectingEx index
 
 removeSingles :: Eq a => [[a]] -> [[a]]
-removeSingles cells = applyWhileReduced removeSinglesStep cells
-
-removeSinglesStep :: Eq a => [[a]] -> [[a]]
-removeSinglesStep cells = removeSinglesStartingAt 0 cells
-
-removeSinglesStartingAt :: Eq a => Int -> [[a]] -> [[a]]
-removeSinglesStartingAt i cells
-    | i >= length cells = cells
-    | otherwise = removeSinglesStartingAt (succ i) (singlesRemovalAt i cells)
-
-singlesRemovalAt :: Eq a => Int -> [[a]] -> [[a]]
-singlesRemovalAt index cells
-    | length (cells !! index) > 1 = cells
-    | otherwise =
-        let r = head (cells !! index)
-            removalInds = [i | i <- intersectingEx index, hasCandidate r (cells !! i)]
-        in [if elem i removalInds then withNo r c else c | (c, i) <- zip cells [0..]]
+removeSingles cells = applyWhileReduced removeSinglesOnce cells
+    where removeSinglesOnce cells = foldl singlesRemovalAt cells allIndices
 
 applyWhenIndex :: (Int -> Bool) -> (a -> a) -> [a] -> [a]
 applyWhenIndex indexPred f xs = [if indexPred i then f x else x | (x, i) <- zip xs [0..]]
