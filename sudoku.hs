@@ -71,10 +71,10 @@ applyWhenIndex :: (Int -> Bool) -> (a -> a) -> [a] -> [a]
 applyWhenIndex indexPred f xs = [if indexPred i then f x else x | (x, i) <- zip xs [0..]]
 
 applyAt :: Int -> (a -> a) -> [a] -> [a]
-applyAt index f xs = applyWhenIndex (==index) f xs
+applyAt index f = applyWhenIndex (==index) f
 
 onlyPossibilities :: [[Int]] -> [[Int]]
-onlyPossibilities cells = applyWhileReduced (removeSingles . onlyPossibilitiesStartingAt 0) cells
+onlyPossibilities = applyWhileReduced (removeSingles . onlyPossibilitiesStartingAt 0)
 
 applyWhileReduced :: Eq t => (t -> t) -> t -> t
 applyWhileReduced f cells =
@@ -111,7 +111,7 @@ getAt' previousIndex indices items
         in head remaining : getAt' index (tail indices) remaining
 
 countCandidates :: Int -> [Int] -> [[Int]] -> Int
-countCandidates cand indices cells = count (==cand) $ concat (getAt indices cells)
+countCandidates cand indices = count (==cand) . concat . getAt indices
 
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = concat ["\ESC[", show c, "m", str, "\ESC[0m"]
