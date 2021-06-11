@@ -77,6 +77,7 @@ singlesRemovalAt cells index
 removeSingles :: Eq a => [[a]] -> [[a]]
 removeSingles cells = applyWhileReduced removeSinglesOnce cells
 
+removeSinglesOnce :: Eq a => [[a]] -> [[a]]
 removeSinglesOnce cells = foldl singlesRemovalAt cells allIndices
 
 solveOnlyPossibilities :: [[Int]] -> [[Int]]
@@ -129,6 +130,12 @@ showPuzzle cells
     | null cells = "\n"
     | otherwise = showRow cells ++ "\n" ++ (showPuzzle (drop nine cells))
 
+showSolution :: ([[Int]], String) -> String
+showSolution sol = concat [snd sol, " Number of candidates = ", show $ length $ concat cells, "\n", showPuzzle cells]
+    where cells = fst sol
+
+showSolutions xs = mapM_ (putStrLn . showSolution) xs
+
 printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStr $ showPuzzle cells
 
@@ -136,15 +143,16 @@ p = loadPuzzle level5_hs_20200619
 p1 = removeSingles p
 p2 = solveOnlyPossibilities p1
 
-solvers = [removeSingles, solveOnlyPossibilities]
+solutions = solve [(p, "Initial.")]
 
-solve puzzle
-    | (length $ concat puzzle) == numCells = puzzle -- solved
-    | puzzle /= a = solve a
-    | puzzle /= b = solve b
-    | otherwise = puzzle
-    where a = removeSinglesOnce puzzle
-          b = solveOnlyPossibilities puzzle
+solve puzzles
+    | (length $ concat p) == numCells = (p, "Solved!") : puzzles -- solved
+    | p /= a = solve ((a, "Singles removed.") : puzzles)
+    | p /= b = solve ((b, "Only possible candidate.") : puzzles)
+    | otherwise = (p, "No solution yet.") : puzzles -- no solution
+    where (p, _) = head puzzles
+          a = removeSingles p
+          b = solveOnlyPossibilities p
 
 
 level5_hs_20200619 = 
