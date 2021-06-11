@@ -120,16 +120,19 @@ showCell c
     | otherwise = cellToStr "." c
     where cellToStr sep c = concat $ [if elem cand c then show cand else sep | cand <- [1..nine]]
 
-showSolution :: ([[Int]], String) -> String
-showSolution sol = concat [snd sol, " Number of candidates = ", show $ length $ concat cells, "\n", showPuzzle cells]
-    where cells = fst sol
+showSolution :: ([[Int]], String, [Bool]) -> String
+showSolution sol = concat [reason, " Number of candidates = ", show $ length $ concat cells, "\n", (showPuzzleHighlights cells highlights), "\n"]
+    where (cells, reason, highlights) = sol
 
 group :: Int -> [a] -> [[a]]
 group _ [] = []
 group c xs = take c xs : group c (drop c xs)
 
+noHighlights :: [Bool]
+noHighlights = replicate numCells False
+
 showPuzzle :: [[Int]] -> String
-showPuzzle cells = showPuzzleHighlights cells $ replicate numCells False
+showPuzzle cells = showPuzzleHighlights cells noHighlights
 
 showPuzzleHighlights :: [[Int]] -> [Bool] -> String
 showPuzzleHighlights cells highlights = intercalate line (map concat (group three rows))
@@ -137,7 +140,7 @@ showPuzzleHighlights cells highlights = intercalate line (map concat (group thre
           rows = map ('\n':) $ map (intercalate "|") $ group nine cellContents
           line = '\n' : replicate 89 '-'
 
-showSolutions xs = mapM_ (putStrLn . showSolution) xs
+showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
 
 printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
@@ -146,17 +149,18 @@ p = loadPuzzle level5_hs_20200619
 p1 = removeSingles p
 p2 = solveOnlyPossibilities p1
 
-solutions = solve [(p, "Initial.")]
+solutions = solve [(p, "Initial.", noHighlights)]
 
 solve puzzles
-    | (length $ concat p) == numCells = (p, "Solved!") : puzzles -- solved
-    | p /= a = solve ((a, "Singles removed.") : puzzles)
-    | p /= b = solve ((b, "Only possible candidate.") : puzzles)
-    | otherwise = (p, "No solution yet.") : puzzles -- no solution
-    where (p, _) = head puzzles
+    | (length $ concat p) == numCells = (p, "Solved!", noHighlights) : puzzles -- solved
+    | p /= a = solve ((a, "Singles removed.", elemDiff p a) : puzzles)
+    | p /= b = solve ((b, "Only possible candidate.", elemDiff p b) : puzzles)
+    | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
+    where (p, _, _) = head puzzles
           a = removeSingles p
           b = solveOnlyPossibilities p
 
+elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
 
 level5_hs_20200619 = 
   "2......91" ++
