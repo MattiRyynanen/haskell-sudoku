@@ -113,22 +113,12 @@ countCandidates cand indices = count (==cand) . concat . getAt indices
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = concat ["\ESC[", show c, "m", str, "\ESC[0m"]
 
-cellToStr :: Foldable t => [Char] -> t Int -> [Char]
-cellToStr sep c = concat $ [if elem cand c then show cand else sep | cand <- [1..nine]]
-
 showCell :: [Int] -> String
 showCell c
     | length c == 1 = withColor 32 (cellToStr " " c)
     | length c == 2 = withColor 33 (cellToStr "." c)
     | otherwise = cellToStr "." c
-
-showRow :: [[Int]] -> String
-showRow = intercalate "|" . take9 . map showCell
-
-showPuzzle :: [[Int]] -> String
-showPuzzle cells
-    | null cells = "\n"
-    | otherwise = showRow cells ++ "\n" ++ (showPuzzle (drop nine cells))
+    where cellToStr sep c = concat $ [if elem cand c then show cand else sep | cand <- [1..nine]]
 
 showSolution :: ([[Int]], String) -> String
 showSolution sol = concat [snd sol, " Number of candidates = ", show $ length $ concat cells, "\n", showPuzzle cells]
@@ -138,17 +128,19 @@ group :: Int -> [a] -> [[a]]
 group _ [] = []
 group c xs = take c xs : group c (drop c xs)
 
+showPuzzle :: [[Int]] -> String
+showPuzzle cells = showPuzzleHighlights cells $ replicate numCells False
 
-showPuzzleWithDiff :: [[Int]] -> [[Int]] -> String
-showPuzzleWithDiff cur prev = intercalate line (map concat (group three rows))
-    where cellContents = [if c == p then showCell c else withColor 44 (showCell c) | (c, p) <- zip cur prev]
+showPuzzleHighlights :: [[Int]] -> [Bool] -> String
+showPuzzleHighlights cells highlights = intercalate line (map concat (group three rows))
+    where cellContents = [if h then withColor 44 (showCell c) else showCell c | (c, h) <- zip cells highlights]
           rows = map ('\n':) $ map (intercalate "|") $ group nine cellContents
           line = '\n' : replicate 89 '-'
 
 showSolutions xs = mapM_ (putStrLn . showSolution) xs
 
 printPuzzle :: [[Int]] -> IO ()
-printPuzzle cells = putStr $ showPuzzle cells
+printPuzzle cells = putStrLn $ showPuzzle cells
 
 p = loadPuzzle level5_hs_20200619
 p1 = removeSingles p
