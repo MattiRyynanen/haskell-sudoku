@@ -49,11 +49,22 @@ intersecting ind = concat $ map ($ind) [rowIndicesAt, colIndicesAt, blockIndices
 intersectingEx :: Int -> [Int]
 intersectingEx ind = withNo ind $ intersecting ind
 
-loadPuzzle :: String -> [[Int]]
-loadPuzzle = map loadCell where loadCell c = if c == '.' then [1..nine] else [(digitToInt c)]
+applyWhenIndex :: (Int -> Bool) -> (a -> a) -> [a] -> [a]
+applyWhenIndex pred f xs = [if pred i then f x else x | (x, i) <- zip xs [0..]]
+
+setAt :: Int -> a -> [a] -> [a]
+setAt index to = applyWhenIndex (==index) (\_ -> to)
+
+applyWhileReduced :: Eq t => (t -> t) -> t -> t
+applyWhileReduced f cells =
+    let reduced = f cells
+    in if reduced == cells then cells else applyWhileReduced f reduced
 
 withNo :: Eq a => a -> [a] -> [a]
 withNo c = filter (/=c)
+
+loadPuzzle :: String -> [[Int]]
+loadPuzzle = map loadCell where loadCell c = if c == '.' then [1..nine] else [(digitToInt c)]
 
 singlesRemovalAt :: Eq a => [[a]] -> Int -> [[a]]
 singlesRemovalAt cells index
@@ -67,19 +78,8 @@ removeSingles :: Eq a => [[a]] -> [[a]]
 removeSingles cells = applyWhileReduced removeSinglesOnce cells
     where removeSinglesOnce cells = foldl singlesRemovalAt cells allIndices
 
-applyWhenIndex :: (Int -> Bool) -> (a -> a) -> [a] -> [a]
-applyWhenIndex indexPred f xs = [if indexPred i then f x else x | (x, i) <- zip xs [0..]]
-
-applyAt :: Int -> (a -> a) -> [a] -> [a]
-applyAt index f = applyWhenIndex (==index) f
-
 onlyPossibilities :: [[Int]] -> [[Int]]
 onlyPossibilities = applyWhileReduced (removeSingles . onlyPossibilitiesStartingAt 0)
-
-applyWhileReduced :: Eq t => (t -> t) -> t -> t
-applyWhileReduced f cells =
-    let reduced = f cells
-    in if reduced == cells then cells else applyWhileReduced f reduced
 
 onlyPossibilitiesStartingAt i cells
     | i >= length cells = cells
@@ -91,10 +91,10 @@ onlyPossibilityAt index cells = onlyPossibilityAt' index (cells !! index) cells
 onlyPossibilityAt' :: Int -> [Int] -> [[Int]] -> [[Int]]
 onlyPossibilityAt' index cands cells
     | null cands = cells
-    | any (==True) (map oneWithin indexSets) = applyAt index (\_ -> [cand]) cells
+    | any (==True) (map exactlyOneIn indices) = setAt index [cand] cells
     | otherwise = onlyPossibilityAt' index (tail cands) cells
-    where oneWithin indx = (countCandidates cand indx cells) == 1
-          indexSets = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
+    where exactlyOneIn indx = (countCandidates cand indx cells) == 1
+          indices = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
           cand = head cands
 
 getAt :: [Int] -> [a] -> [a]
@@ -102,8 +102,7 @@ getAt = getAt' 0
 
 getAt' :: Int -> [Int] -> [a] -> [a]
 getAt' previousIndex indices items
-    | null indices = []
-    | null items = []
+    | null indices || null items = []
     | previousIndex > head indices = error $ concat ["Indices array needs to be in ascending order. ", show previousIndex, " > ", show (head indices)]
     | otherwise =
         let index = head indices
