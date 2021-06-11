@@ -99,6 +99,19 @@ findNakedPairs cells = [(p, indx) | (p, indx) <- zip pp (map indicesWhere pp), l
     where pp = possiblePairs cells
           indicesWhere pair = [i | (c, i) <- zip cells [0..], c == pair]
 
+-- checkPair (rowIndices 4) px [4,6]
+checkPair indices cells pair
+    | length pair_inds == 2 = affected_inds
+    | otherwise = []
+    where cs = zip (getAt indices cells) indices
+          pair_inds = [i | (c, i) <- cs, c == pair]
+          affected_inds = [i | (c, i) <- cs, applies c]
+          applies cell = length cell > 1 && cell /= pair && length (withNoAny pair cell) > 0
+          
+notIncludes cands cell = any (\a -> not (elem a cell)) cell 
+
+withNoAny cands cell = [c | c <- cell, not (elem c cands)]
+
 unique :: Ord a => [a] -> [a]
 unique = Set.toList . Set.fromList
 
