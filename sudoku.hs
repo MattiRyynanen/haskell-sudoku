@@ -95,8 +95,9 @@ onlyPossibilityAt' index cands cells
           indices = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
           cand = head cands
 
---nakedPairsAt index cells
---    where indices = map ($index) [rowIndices, colIndices, blockIndices]
+findNakedPairs cells = [(p, indx) | (p, indx) <- zip pp (map indicesWhere pp), length indx >= 2]
+    where pp = possiblePairs cells
+          indicesWhere pair = [i | (c, i) <- zip cells [0..], c == pair]
 
 unique :: Ord a => [a] -> [a]
 unique = Set.toList . Set.fromList
