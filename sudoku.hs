@@ -95,6 +95,15 @@ onlyPossibilityAt' index cands cells
           indices = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
           cand = head cands
 
+--nakedPairsAt index cells
+--    where indices = map ($index) [rowIndices, colIndices, blockIndices]
+
+unique :: Ord a => [a] -> [a]
+unique = Set.toList . Set.fromList
+
+possiblePairs :: [[Int]] -> [[Int]]
+possiblePairs = unique . filter (\c -> length c == 2)
+
 getAt :: [Int] -> [a] -> [a]
 getAt = getAt' 0
 
@@ -148,6 +157,8 @@ printPuzzle cells = putStrLn $ showPuzzle cells
 p = loadPuzzle level5_hs_20200619
 p1 = removeSingles p
 p2 = solveOnlyPossibilities p1
+(px, _, _) = head solutions
+px_pairs = getAt (rowIndices 4) px
 
 solutions = solve [(p, "The loaded puzzle.", noHighlights)]
 
