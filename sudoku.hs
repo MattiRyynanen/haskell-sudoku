@@ -138,9 +138,10 @@ group :: Int -> [a] -> [[a]]
 group _ [] = []
 group c xs = take c xs : group c (drop c xs)
 
-showPuzzleWithDiff cur prev = intercalate "\n" $ map (intercalate "|") rows
+showPuzzleWithDiff :: [[Int]] -> [[Int]] -> String
+showPuzzleWithDiff cur prev = concat rows
     where cellContents = [if c == p then showCell c else withColor 44 (showCell c) | (c, p) <- zip cur prev]
-          rows = group nine cellContents
+          rows = map ('\n':) $ map (intercalate "|") $ group nine cellContents
 
 showSolutions xs = mapM_ (putStrLn . showSolution) xs
 
