@@ -134,6 +134,14 @@ showSolution :: ([[Int]], String) -> String
 showSolution sol = concat [snd sol, " Number of candidates = ", show $ length $ concat cells, "\n", showPuzzle cells]
     where cells = fst sol
 
+group :: Int -> [a] -> [[a]]
+group _ [] = []
+group c xs = take c xs : group c (drop c xs)
+
+showPuzzleWithDiff cur prev = intercalate "\n" $ map (intercalate "|") rows
+    where cellContents = [if c == p then showCell c else withColor 44 (showCell c) | (c, p) <- zip cur prev]
+          rows = group nine cellContents
+
 showSolutions xs = mapM_ (putStrLn . showSolution) xs
 
 printPuzzle :: [[Int]] -> IO ()
