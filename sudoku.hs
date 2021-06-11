@@ -149,7 +149,7 @@ p = loadPuzzle level5_hs_20200619
 p1 = removeSingles p
 p2 = solveOnlyPossibilities p1
 
-solutions = solve [(p, "Initial.", noHighlights)]
+solutions = solve [(p, "The loaded puzzle.", noHighlights)]
 
 solve puzzles
     | (length $ concat p) == numCells = (p, "Solved!", noHighlights) : puzzles -- solved
