@@ -76,14 +76,8 @@ singlesRemovalAt cells index
 
 removeSingles :: Eq a => [[a]] -> [[a]]
 removeSingles cells = applyWhileReduced removeSinglesOnce cells
-    where removeSinglesOnce cells = foldl singlesRemovalAt cells allIndices
 
---onlyPossibilities :: [[Int]] -> [[Int]]
---onlyPossibilities = applyWhileReduced (removeSingles . onlyPossibilitiesStartingAt 0)
-
---onlyPossibilitiesStartingAt i cells
---    | i >= length cells = cells
---    | otherwise = onlyPossibilitiesStartingAt (succ i) (onlyPossibilityAt cells i)
+removeSinglesOnce cells = foldl singlesRemovalAt cells allIndices
 
 solveOnlyPossibilities :: [[Int]] -> [[Int]]
 solveOnlyPossibilities cells = foldl onlyPossibilityAt cells allIndices
@@ -141,6 +135,17 @@ printPuzzle cells = putStr $ showPuzzle cells
 p = loadPuzzle level5_hs_20200619
 p1 = removeSingles p
 p2 = solveOnlyPossibilities p1
+
+solvers = [removeSingles, solveOnlyPossibilities]
+
+solve puzzle
+    | (length $ concat puzzle) == numCells = puzzle -- solved
+    | puzzle /= a = solve a
+    | puzzle /= b = solve b
+    | otherwise = puzzle
+    where a = removeSinglesOnce puzzle
+          b = solveOnlyPossibilities puzzle
+
 
 level5_hs_20200619 = 
   "2......91" ++
