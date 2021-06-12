@@ -94,6 +94,8 @@ solveOnlyPossibilities cells = foldl onlyPossibilityAt cells allIndices
 onlyPossibilityAt :: [[Int]] -> Int -> [[Int]]
 onlyPossibilityAt cells index = onlyPossibilityAt' index (cells !! index) cells
 
+notEmpty xs = not $ null xs
+
 onlyPossibilityAt' :: Int -> [Int] -> [[Int]] -> [[Int]]
 onlyPossibilityAt' index cands cells
     | null cands = cells
@@ -106,6 +108,12 @@ onlyPossibilityAt' index cands cells
 findNakedPairs cells = [(p, indx) | (p, indx) <- zip pp (map indicesWhere pp), length indx >= 2]
     where pp = possiblePairs cells
           indicesWhere pair = [i | (c, i) <- zip cells [0..], c == pair]
+
+findNakedPairRemovals cells = concat $ filter notEmpty [findNakedPairRemovals' indx cells | indx <- cellSetIndices]
+
+findNakedPairRemovals' indices cells = [(pair, indx) | (pair, indx) <- zip pairs removing_pairs, notEmpty indx]
+    where pairs = possiblePairs $ getAt indices cells
+          removing_pairs = map (nakedPairRemoves indices cells) pairs
 
 -- nakedPairRemoves (rowIndices 4) px [4,6]
 -- Find the indices of cells where given pair eliminates candidates.
