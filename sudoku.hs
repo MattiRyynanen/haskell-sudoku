@@ -94,6 +94,7 @@ solveOnlyPossibilities cells = foldl onlyPossibilityAt cells allIndices
 onlyPossibilityAt :: [[Int]] -> Int -> [[Int]]
 onlyPossibilityAt cells index = onlyPossibilityAt' index (cells !! index) cells
 
+notEmpty :: Foldable t => t a -> Bool
 notEmpty xs = not $ null xs
 
 onlyPossibilityAt' :: Int -> [Int] -> [[Int]] -> [[Int]]
@@ -105,14 +106,17 @@ onlyPossibilityAt' index cands cells
           indices = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
           cand = head cands
 
+solveNakedPair :: [[Int]] -> [[Int]]
 solveNakedPair cells
     | null nps = cells -- no naked pairs removal
     | otherwise = applyWhenIndex (\i -> elem i indx) (\cell -> withNoAny pair cell) cells
     where nps = findNakedPairRemovals cells
           (pair, indx) = head nps
 
+findNakedPairRemovals :: [[Int]] -> [([Int], [Int])]
 findNakedPairRemovals cells = concat $ filter notEmpty [findNakedPairRemovals' indx cells | indx <- cellSetIndices]
 
+findNakedPairRemovals' :: [Int] -> [[Int]] -> [([Int], [Int])]
 findNakedPairRemovals' indices cells = [(pair, indx) | (pair, indx) <- zip pairs removing_pairs, notEmpty indx]
     where pairs = possiblePairs $ getAt indices cells
           removing_pairs = map (nakedPairRemoves indices cells) pairs
@@ -182,12 +186,13 @@ showPuzzleHighlights cells highlights = intercalate line (map concat (group thre
           rows = map ('\n':) $ map (intercalate "|") $ group nine cellContents
           line = '\n' : replicate 89 '-'
 
+showSolutions :: [([[Int]], String, [Bool])] -> IO ()
 showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
 
 printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
 
-p = loadPuzzle xtr_sud_04 --level5_hs_20200619
+p = loadPuzzle level5_hs_20200619
 (px, _, _) = head solutions
 px_pairs = getAt (rowIndices 4) px
 
@@ -204,6 +209,7 @@ solve puzzles
           b = solveOnlyPossibilities p
           c = solveNakedPair p
 
+elemDiff :: Eq a => [a] -> [a] -> [Bool]
 elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
 
 level5_hs_20200619 = 
