@@ -183,8 +183,8 @@ showPuzzle cells = showPuzzleHighlights cells noHighlights
 showPuzzleHighlights :: [[Int]] -> [Bool] -> String
 showPuzzleHighlights cells highlights = intercalate line (map concat (group three rows))
     where cellContents = [if h then withColor 44 (showCell c) else showCell c | (c, h) <- zip cells highlights]
-          rows = map ('\n':) $ map (intercalate "|") $ group nine cellContents
-          line = '\n' : replicate 89 '-'
+          rows = map ('\n':) $ map (intercalate "|") $ group three $ map (intercalate " ") $ group three cellContents
+          line = '\n' : (intercalate "+" $ replicate 3 (replicate 29 '-'))
 
 showSolutions :: [([[Int]], String, [Bool])] -> IO ()
 showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
