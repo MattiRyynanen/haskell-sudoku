@@ -132,6 +132,18 @@ nakedPairRemoves indices cells pair
           affected_inds = [i | (c, i) <- cs, removalApplies c]
           removalApplies cell = length cell > 1 && cell /= pair && length (withNoAny pair cell) < length cell
 
+--blockOmission :: Int -> [[Int]] -> [([Int], [Int])]
+blockOmission blockIndex cells = candidates
+    where bi = blockIndices blockIndex
+          unsolved_cells = unsolved $ getAt bi cells
+          candidates = uniqueCandidates unsolved_cells
+
+uniqueCandidates :: [[Int]] -> [Int]
+uniqueCandidates = unique . concat
+
+unsolved :: [[Int]] -> [[Int]]
+unsolved = filter (\cell -> length cell > 1)
+
 withNoAny :: [Int] -> [Int] -> [Int]
 withNoAny cands cell = [c | c <- cell, not (elem c cands)]
 
