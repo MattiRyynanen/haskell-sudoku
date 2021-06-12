@@ -22,6 +22,14 @@ colIndices c = take9 [c, (c + nine)..]
 blockIndices :: Int -> [Int]
 blockIndices c = take9 [i | i <- allIndices, blockOf i == c]
 
+cellSetIndices :: [[Int]]
+cellSetIndices = concat $ map cellSetIndicesAt [0..8]
+
+cellSetIndicesAt :: Int -> [[Int]]
+cellSetIndicesAt id
+    | id >= nine = error ("Set index needs to be in range 0..8, got " ++ show id)
+    | otherwise = map ($id) [rowIndices, colIndices, blockIndices]
+
 rowOf :: Int -> Int
 rowOf ind = div ind nine
 
