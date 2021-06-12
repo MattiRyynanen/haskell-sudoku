@@ -126,7 +126,7 @@ nakedPairRemoves indices cells pair
     where cs = zip (getAt indices cells) indices
           pair_inds = [i | (c, i) <- cs, c == pair]
           affected_inds = [i | (c, i) <- cs, removalApplies c]
-          removalApplies cell = length cell > 1 && cell /= pair && length (withNoAny pair cell) > 0
+          removalApplies cell = length cell > 1 && cell /= pair && length (withNoAny pair cell) < length cell
 
 withNoAny :: [Int] -> [Int] -> [Int]
 withNoAny cands cell = [c | c <- cell, not (elem c cands)]
