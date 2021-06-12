@@ -105,9 +105,11 @@ onlyPossibilityAt' index cands cells
           indices = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
           cand = head cands
 
-findNakedPairs cells = [(p, indx) | (p, indx) <- zip pp (map indicesWhere pp), length indx >= 2]
-    where pp = possiblePairs cells
-          indicesWhere pair = [i | (c, i) <- zip cells [0..], c == pair]
+solveNakedPair cells
+    | null nps = cells -- no naked pairs removal
+    | otherwise = applyWhenIndex (\i -> elem i indx) (\cell -> withNoAny pair cell) cells
+    where nps = findNakedPairRemovals cells
+          (pair, indx) = head nps
 
 findNakedPairRemovals cells = concat $ filter notEmpty [findNakedPairRemovals' indx cells | indx <- cellSetIndices]
 
@@ -197,10 +199,12 @@ solve puzzles
     | (length $ concat p) == numCells = (p, "Solved!", noHighlights) : puzzles -- solved
     | p /= a = solve ((a, "Singles removed.", elemDiff p a) : puzzles)
     | p /= b = solve ((b, "Only possible candidate.", elemDiff p b) : puzzles)
+    | p /= c = solve ((c, "A naked pair.", elemDiff p c) : puzzles)
     | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
     where (p, _, _) = head puzzles
           a = removeSingles p
           b = solveOnlyPossibilities p
+          c = solveNakedPair p
 
 elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
 
