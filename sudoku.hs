@@ -236,7 +236,7 @@ showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
 printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
 
-p = loadPuzzle xtr_sud_19 --level5_hs_20200619
+p = loadPuzzle level5_hs_20200619
 (px, _, _) = head solutions
 px_pairs = getAt (rowIndices 4) px
 
@@ -269,6 +269,7 @@ level5_hs_20200619 =
   "...7..52." ++
   "42......7"
 
+-- solved
 xtr_sud_04 =
     "..4...3.." ++
     "..7...2.." ++
@@ -280,7 +281,7 @@ xtr_sud_04 =
     "1..3.7..5" ++
     ".2..1..9."
 
--- with omissions
+-- with omissions, solved
 xtr_sud_19 =
     ".8..95.3." ++
     "........1" ++
