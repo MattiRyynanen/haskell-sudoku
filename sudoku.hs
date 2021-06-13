@@ -36,6 +36,10 @@ rowOf ind = div ind nine
 colOf :: Int -> Int
 colOf ind = rem ind nine
 
+allSame :: Eq a => [a] -> Bool
+allSame [] = error "Can't check for empty list."
+allSame xs = all (== head xs) $ tail xs
+
 blockOf :: Int -> Int
 blockOf ind =
     let r = div (rowOf ind) three
@@ -133,16 +137,28 @@ nakedPairRemoves indices cells pair
           removalApplies cell = length cell > 1 && cell /= pair && length (withNoAny pair cell) < length cell
 
 --blockOmission :: Int -> [[Int]] -> [([Int], [Int])]
-blockOmission blockIndex cells = candidates
+searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candidates (map withCand candidates), hasRemovals cand indx]
     where bi = blockIndices blockIndex
-          unsolved_cells = unsolved $ getAt bi cells
-          candidates = uniqueCandidates unsolved_cells
+          unsolved_cells = [(c, i) | (c, i) <- zip (getAt bi cells) bi, cellUnsolved c]
+          candidates = uniqueCandidates $ map fst unsolved_cells
+          withCand cand = [i | (c, i) <- unsolved_cells, hasCand cand c]
+          inAnotherBlock ind = blockOf ind /= blockIndex
+          hasRemovalCand indx c = any (hasCand c) $ getAt (filter (inAnotherBlock) indx) cells
+          onSameRow c indx = (allSame $ map rowOf indx) && hasRemovalCand (rowIndicesAt $ head indx) c
+          onSameCol c indx = (allSame $ map colOf indx) && hasRemovalCand (colIndicesAt $ head indx) c
+          hasRemovals cand indx = onSameRow cand indx || onSameCol cand indx
+
+hasCand cand cell = elem cand cell
+hasNoCand cand cell = not $ hasCand cand cell
 
 uniqueCandidates :: [[Int]] -> [Int]
 uniqueCandidates = unique . concat
 
 unsolved :: [[Int]] -> [[Int]]
-unsolved = filter (\cell -> length cell > 1)
+unsolved = filter cellUnsolved
+
+cellUnsolved :: Foldable t => t a -> Bool
+cellUnsolved cell = length cell > 1
 
 withNoAny :: [Int] -> [Int] -> [Int]
 withNoAny cands cell = [c | c <- cell, not (elem c cands)]
