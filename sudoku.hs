@@ -160,8 +160,8 @@ searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candi
           withCand cand = [i | (c, i) <- unsolved_cells, hasCand cand c]
           inAnotherBlock ind = blockOf ind /= blockIndex
           hasRemovalCand indx c = any (hasCand c) $ getAt (filter (inAnotherBlock) indx) cells
-          onSameRow c indx = (allSame $ map rowOf indx) && hasRemovalCand (rowIndicesAt $ head indx) c
-          onSameCol c indx = (allSame $ map colOf indx) && hasRemovalCand (colIndicesAt $ head indx) c
+          onSameRow c indx = sameRow indx && hasRemovalCand (rowIndicesAt $ head indx) c
+          onSameCol c indx = sameCol indx && hasRemovalCand (colIndicesAt $ head indx) c
           hasRemovals cand indx = onSameRow cand indx || onSameCol cand indx
 
 hasCand cand cell = elem cand cell
