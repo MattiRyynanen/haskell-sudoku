@@ -40,6 +40,9 @@ allSame :: Eq a => [a] -> Bool
 allSame [] = error "Can't check for empty list."
 allSame xs = all (== head xs) $ tail xs
 
+sameRow = allSame . map rowOf
+sameCol = allSame . map colOf
+
 blockOf :: Int -> Int
 blockOf ind =
     let r = div (rowOf ind) three
@@ -136,7 +139,20 @@ nakedPairRemoves indices cells pair
           affected_inds = [i | (c, i) <- cs, removalApplies c]
           removalApplies cell = length cell > 1 && cell /= pair && length (withNoAny pair cell) < length cell
 
---blockOmission :: Int -> [[Int]] -> [([Int], [Int])]
+solveBlockOmission :: [[Int]] -> [[Int]]
+solveBlockOmission cells
+    | null oms = cells -- no omissions found
+    | otherwise = applyWhenIndex (\i -> elem i removalInds) (\cell -> withNo cand cell) cells
+    where oms = concat $ map (\b -> (searchBlockOmission b cells)) [0..8]
+          (cand, indx) = head oms
+          h_indx = head indx
+          blockIndex = blockOf h_indx
+          inAnotherBlock ind = blockOf ind /= blockIndex
+          f_indx = if sameRow indx then rowIndicesAt else colIndicesAt
+          removalInds = filter (inAnotherBlock) $ f_indx h_indx
+
+
+searchBlockOmission :: Int -> [[Int]] -> [(Int, [Int])]
 searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candidates (map withCand candidates), hasRemovals cand indx]
     where bi = blockIndices blockIndex
           unsolved_cells = [(c, i) | (c, i) <- zip (getAt bi cells) bi, cellUnsolved c]
@@ -230,12 +246,14 @@ solve puzzles
     | (length $ concat p) == numCells = (p, "Solved!", noHighlights) : puzzles -- solved
     | p /= a = solve ((a, "Singles removed.", elemDiff p a) : puzzles)
     | p /= b = solve ((b, "Only possible candidate.", elemDiff p b) : puzzles)
+    | p /= bo = solve ((bo, "Omission: candidates in block on same row or column.", elemDiff p bo) : puzzles)
     | p /= c = solve ((c, "A naked pair.", elemDiff p c) : puzzles)
     | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
     where (p, _, _) = head puzzles
           a = removeSingles p
           b = solveOnlyPossibilities p
           c = solveNakedPair p
+          bo = solveBlockOmission p
 
 elemDiff :: Eq a => [a] -> [a] -> [Bool]
 elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
