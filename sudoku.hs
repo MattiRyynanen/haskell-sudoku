@@ -7,19 +7,23 @@ three = 3
 numCells = nine * nine
 allIndices = [0..pred numCells]
 
+type Index = Int
+type Cell = [Int]
+type Puzzle = [Cell]
+
 take9 :: [a] -> [a]
 take9 = take nine
 
 count :: (a -> Bool) -> [a] -> Int
 count pred = length . filter pred
 
-rowIndices :: Int -> [Int]
+rowIndices :: Int -> [Index]
 rowIndices r = take9 [nine * r..]
 
-colIndices :: Int -> [Int]
+colIndices :: Int -> [Index]
 colIndices c = take9 [c, (c + nine)..]
 
-blockIndices :: Int -> [Int]
+blockIndices :: Int -> [Index]
 blockIndices c = take9 [i | i <- allIndices, blockOf i == c]
 
 cellSetIndices :: [[Int]]
@@ -78,7 +82,7 @@ applyWhileReduced f cells =
 withNo :: Eq a => a -> [a] -> [a]
 withNo c = filter (/=c)
 
-loadPuzzle :: String -> [[Int]]
+loadPuzzle :: String -> Puzzle
 loadPuzzle = map loadCell where loadCell c = if c == '.' then [1..nine] else [(digitToInt c)]
 
 singlesRemovalAt :: Eq a => [[a]] -> Int -> [[a]]
@@ -95,10 +99,10 @@ removeSingles cells = applyWhileReduced removeSinglesOnce cells
 removeSinglesOnce :: Eq a => [[a]] -> [[a]]
 removeSinglesOnce cells = foldl singlesRemovalAt cells allIndices
 
-solveOnlyPossibilities :: [[Int]] -> [[Int]]
+solveOnlyPossibilities :: [Cell] -> [Cell]
 solveOnlyPossibilities cells = foldl onlyPossibilityAt cells allIndices
 
-onlyPossibilityAt :: [[Int]] -> Int -> [[Int]]
+onlyPossibilityAt :: [Cell] -> Index -> [Cell]
 onlyPossibilityAt cells index = onlyPossibilityAt' index (cells !! index) cells
 
 notEmpty :: Foldable t => t a -> Bool
@@ -113,24 +117,24 @@ onlyPossibilityAt' index cands cells
           indices = map ($index) [rowIndicesAt, colIndicesAt, blockIndicesAt]
           cand = head cands
 
-solveNakedPair :: [[Int]] -> [[Int]]
+solveNakedPair :: Puzzle -> Puzzle
 solveNakedPair cells
     | null nps = cells -- no naked pairs removal
     | otherwise = applyWhenIndex (\i -> elem i indx) (\cell -> withNoAny pair cell) cells
     where nps = findNakedPairRemovals cells
           (pair, indx) = head nps
 
-findNakedPairRemovals :: [[Int]] -> [([Int], [Int])]
+findNakedPairRemovals :: Puzzle -> [([Int], [Int])]
 findNakedPairRemovals cells = concat $ filter notEmpty [findNakedPairRemovals' indx cells | indx <- cellSetIndices]
 
-findNakedPairRemovals' :: [Int] -> [[Int]] -> [([Int], [Int])]
+findNakedPairRemovals' :: [Int] -> Puzzle -> [([Int], [Int])]
 findNakedPairRemovals' indices cells = [(pair, indx) | (pair, indx) <- zip pairs removing_pairs, notEmpty indx]
     where pairs = possiblePairs $ getAt indices cells
           removing_pairs = map (nakedPairRemoves indices cells) pairs
 
 -- nakedPairRemoves (rowIndices 4) px [4,6]
 -- Find the indices of cells where given pair eliminates candidates.
-nakedPairRemoves :: [Int] -> [[Int]] -> [Int] -> [Int]
+nakedPairRemoves :: [Int] -> Puzzle -> [Int] -> [Int]
 nakedPairRemoves indices cells pair
     | length pair_inds == 2 = affected_inds
     | otherwise = []
@@ -139,7 +143,7 @@ nakedPairRemoves indices cells pair
           affected_inds = [i | (c, i) <- cs, removalApplies c]
           removalApplies cell = length cell > 1 && cell /= pair && length (withNoAny pair cell) < length cell
 
-solveBlockOmission :: [[Int]] -> [[Int]]
+solveBlockOmission :: Puzzle -> Puzzle
 solveBlockOmission cells
     | null oms = cells -- no omissions found
     | otherwise = applyWhenIndex (\i -> elem i removalInds) (\cell -> withNo cand cell) cells
@@ -152,7 +156,7 @@ solveBlockOmission cells
           removalInds = filter (inAnotherBlock) $ f_indx h_indx
 
 
-searchBlockOmission :: Int -> [[Int]] -> [(Int, [Int])]
+searchBlockOmission :: Int -> Puzzle -> [(Int, [Int])]
 searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candidates (map withCand candidates), hasRemovals cand indx]
     where bi = blockIndices blockIndex
           unsolved_cells = [(c, i) | (c, i) <- zip (getAt bi cells) bi, cellUnsolved c]
@@ -167,7 +171,7 @@ searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candi
 hasCand cand cell = elem cand cell
 hasNoCand cand cell = not $ hasCand cand cell
 
-uniqueCandidates :: [[Int]] -> [Int]
+uniqueCandidates :: [Cell] -> [Int]
 uniqueCandidates = unique . concat
 
 unsolved :: [[Int]] -> [[Int]]
