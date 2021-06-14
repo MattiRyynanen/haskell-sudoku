@@ -167,6 +167,14 @@ searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candi
           onSameRow c indx = sameRow indx && hasRemovalCand (rowIndicesAt $ head indx) c
           onSameCol c indx = sameCol indx && hasRemovalCand (colIndicesAt $ head indx) c
           hasRemovals cand indx = onSameRow cand indx || onSameCol cand indx
+ 
+searchOmissionWithinBlock :: Int -> [Index] -> Puzzle -> [Int]
+searchOmissionWithinBlock cand indx cells = if withinOneBlock then r else []
+    where candInds = [i | (c, i) <- zip (getAt indx cells) indx, hasCand cand c]
+          blockIds = unique $ map (blockOf) candInds
+          withinOneBlock = length blockIds == 1
+          bi = blockIndices (head blockIds)
+          r = [i | (c, i) <- zip (getAt bi cells) bi, hasCand cand c, not $ elem i bi]
 
 hasCand cand cell = elem cand cell
 hasNoCand cand cell = not $ hasCand cand cell
