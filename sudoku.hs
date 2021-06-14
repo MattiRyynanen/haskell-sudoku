@@ -7,6 +7,7 @@ three = 3
 numCells = nine * nine
 allIndices = [0..pred numCells]
 
+type Candidate = Int
 type Index = Int
 type Cell = [Int]
 type Puzzle = [Cell]
@@ -167,14 +168,22 @@ searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candi
           onSameRow c indx = sameRow indx && hasRemovalCand (rowIndicesAt $ head indx) c
           onSameCol c indx = sameCol indx && hasRemovalCand (colIndicesAt $ head indx) c
           hasRemovals cand indx = onSameRow cand indx || onSameCol cand indx
- 
-searchOmissionWithinBlock :: Int -> [Index] -> Puzzle -> [Int]
-searchOmissionWithinBlock cand indx cells = if withinOneBlock then r else []
+
+solveOmissionWithinBlock :: Puzzle -> Puzzle
+solveOmissionWithinBlock cells
+    | null oms = cells
+    | otherwise = applyWhenIndex (\i -> elem i removalInds) (\cell -> withNo candidateToRemove cell) cells
+    where rowsAndCols = concat [map rowIndices [0..8], map colIndices [0..8]]
+          oms = concat [searchOmissionWithinBlock cand indx cells | cand <- [1..9], indx <- rowsAndCols]
+          (candidateToRemove, removalInds) = head oms
+
+searchOmissionWithinBlock :: Int -> [Index] -> Puzzle -> [(Candidate, [Index])]
+searchOmissionWithinBlock cand indx cells = if withinOneBlock && length r > 0 then [(cand, r)] else []
     where candInds = [i | (c, i) <- zip (getAt indx cells) indx, hasCand cand c]
           blockIds = unique $ map (blockOf) candInds
           withinOneBlock = length blockIds == 1
           bi = blockIndices (head blockIds)
-          r = [i | (c, i) <- zip (getAt bi cells) bi, hasCand cand c, not $ elem i bi]
+          r = [i | (c, i) <- zip (getAt bi cells) bi, hasCand cand c, not $ elem i indx]
 
 hasCand cand cell = elem cand cell
 hasNoCand cand cell = not $ hasCand cand cell
@@ -248,7 +257,7 @@ showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
 printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
 
-p = loadPuzzle level5_hs_20200619
+p = loadPuzzle xtr_sud_04 --level5_hs_20200619
 (px, _, _) = head solutions
 px_pairs = getAt (rowIndices 4) px
 
@@ -259,6 +268,7 @@ solve puzzles
     | p /= a = solve ((a, "Singles removed.", elemDiff p a) : puzzles)
     | p /= b = solve ((b, "Only possible candidate.", elemDiff p b) : puzzles)
     | p /= bo = solve ((bo, "Omission: candidates in block on same row or column.", elemDiff p bo) : puzzles)
+    | p /= oib = solve ((oib, "Omission: candidates within one block.", elemDiff p oib) : puzzles )
     | p /= c = solve ((c, "A naked pair.", elemDiff p c) : puzzles)
     | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
     where (p, _, _) = head puzzles
@@ -266,6 +276,7 @@ solve puzzles
           b = solveOnlyPossibilities p
           c = solveNakedPair p
           bo = solveBlockOmission p
+          oib = solveOmissionWithinBlock p
 
 elemDiff :: Eq a => [a] -> [a] -> [Bool]
 elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
