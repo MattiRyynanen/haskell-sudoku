@@ -21,6 +21,12 @@ colOf cell = index cell `rem` 9
 posOf :: Cell -> String
 posOf c = concat $ map (\f -> show $ f c) [rowOf, colOf, blockOf]
 
+intersects :: Cell -> Cell -> Bool
+intersects a b = notSame && anyIntersection
+    where ops = [rowOf, colOf, blockOf]
+          notSame = index a /= index b
+          anyIntersection = or [i == j | (i, j) <- zip (map ($ a) ops) (map ($ b) ops)]
+
 hasCand :: Cell -> Candidate -> Bool
 hasCand cell cand = elem cand (candidates cell)
 
@@ -40,13 +46,16 @@ cellAt puzzle i = head $ filter (\c -> index c == i) puzzle
 removeCellCandidate cell cand = cell { candidates = withNo cand (candidates cell) }
 setCellCandidate cell cand = cell { candidates = [cand] }
 
-removeCandidate :: Puzzle -> Index -> Candidate -> Puzzle
-removeCandidate puzzle index cand
-    | otherwise = puzzle
-    where cell = cellAt puzzle index
+removeCandidate :: Puzzle -> Cell -> Candidate -> Puzzle
+removeCandidate puzzle cell cand = newPuzzle
+    where newPuzzle = applyWhen sameCell removeCandidate puzzle
+          sameCell c = index c == index cell
+          removeCandidate c = removeCellCandidate c cand
 
-setValue :: Puzzle -> Index -> Candidate -> Puzzle
-setValue puzzle index cand = newPuzzle
-    where newPuzzle = applyAt index (\c -> setCellCandidate c cand) puzzle
+setFinal :: Puzzle -> Cell -> Candidate -> Puzzle
+setFinal puzzle cell cand = newPuzzle
+    where newPuzzle = applyWhen sameCell setCandidate puzzle
+          sameCell c = index c == index cell
+          setCandidate c = setCellCandidate c cand
 
 p = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
