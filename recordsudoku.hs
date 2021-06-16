@@ -1,3 +1,6 @@
+import qualified Data.Char
+import qualified SamplePuzzles
+
 type Index = Int
 type Candidate = Int
 data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving Show
@@ -19,9 +22,9 @@ numCandidates c = length $ candidates c
 isSolved c = numCandidates c == 1
 
 intersectsEx :: Cell -> Cell -> Bool
-intersectsEx a b = notSame && anyIntersection
+intersectsEx a b = notSamePos && anyIntersection
     where ops = [rowOf, colOf, blockOf]
-          notSame = index a /= index b
+          notSamePos = index a /= index b
           anyIntersection = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
 
 hasCand :: Cell -> Candidate -> Bool
@@ -58,6 +61,14 @@ setFinal puzzle cell final
     | otherwise = broadcastFinal withFinal
     where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
           intersectIndx = map (index) $ filter (intersectsEx cell) withFinal
-          broadcastFinal puz = foldl (\p -> removeCandidate p final) puz intersectIndx
+          broadcastFinal puz = foldl (\p ind -> removeCandidate p final ind) puz intersectIndx
 
-p = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
+createEmptyPuzzle :: Puzzle
+createEmptyPuzzle = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
+
+loadPuzzle :: String -> Puzzle
+loadPuzzle puzzle_str = foldl applyValue createEmptyPuzzle indx_values
+    where indx_values = [(i, Data.Char.digitToInt(s)) | (i, s) <- zip [0..] puzzle_str, s /= '.']
+          applyValue p iv = setFinal p (p !! fst iv) (snd iv)
+
+p = loadPuzzle SamplePuzzles.xtr_sud_04
