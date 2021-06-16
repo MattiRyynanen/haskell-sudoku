@@ -58,7 +58,7 @@ removeCandidate puzzle cand ind
 
 setFinal :: Puzzle -> Cell -> Candidate -> Puzzle
 setFinal puzzle cell final
-    | isSolved cell = error "Can't set final for a solved cell."
+    | isSolved cell && hasCand cell final = puzzle -- Cell has been already solved.
     | hasNoCand cell final = error "Can't set final since it is not in cell candidates."
     | otherwise = broadcastFinal withFinal
     where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
