@@ -1,6 +1,7 @@
 import Data.List (intercalate)
 import qualified Data.Set as Set
 import Data.Char (digitToInt)
+import SamplePuzzles
 
 nine = 9
 three = 3
@@ -257,7 +258,7 @@ showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
 printPuzzle :: [[Int]] -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
 
-p = loadPuzzle xtr_sud_04 --level5_hs_20200619
+p = loadPuzzle SamplePuzzles.xtr_sud_04 --level5_hs_20200619
 (px, _, _) = head solutions
 px_pairs = getAt (rowIndices 4) px
 
@@ -280,49 +281,3 @@ solve puzzles
 
 elemDiff :: Eq a => [a] -> [a] -> [Bool]
 elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
-
-level5_hs_20200619 = 
-  "2......91" ++
-  ".46..2..." ++
-  "..1..7.3." ++
-  ".....9.7." ++
-  ".95...28." ++
-  ".1.8....." ++
-  ".5.1..9.." ++
-  "...7..52." ++
-  "42......7"
-
--- solved
-xtr_sud_04 =
-    "..4...3.." ++
-    "..7...2.." ++
-    "8..2.5..4" ++
-    "..58.69.." ++
-    "4..9.2..6" ++
-    "....4...." ++
-    "...6.4..." ++
-    "1..3.7..5" ++
-    ".2..1..9."
-
--- with omissions, solved
-xtr_sud_19 =
-    ".8..95.3." ++
-    "........1" ++
-    "2.7.3..6." ++
-    "5..1.4..6" ++
-    "........4" ++
-    "1..3.8..5" ++
-    "4.3.5..1." ++
-    "........2" ++
-    ".6..17.5."
-
-xtr_sud_78 =
-    "........." ++
-    "16.3...4." ++
-    ".9..648.." ++
-    "..5..872." ++
-    ".......58" ++
-    "..7..261." ++
-    ".5..962.." ++
-    "43.5...6." ++
-    "........."
