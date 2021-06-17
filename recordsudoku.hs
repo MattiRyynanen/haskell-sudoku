@@ -36,7 +36,7 @@ intersectsEx a b = notSamePos && anyIntersection
           anyIntersection = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
 
 hasCand :: Cell -> Candidate -> Bool
-hasCand cell cand = elem cand (candidates cell)
+hasCand cell cand = cand `elem` (candidates cell)
 
 hasNoCand :: Cell -> Candidate -> Bool
 hasNoCand cell cand = not $ hasCand cell cand
@@ -73,9 +73,8 @@ setFinal puzzle cell final
           intersectIndx = map (index) $ filter (intersectsEx cell) withFinal
           broadcastFinal puz = foldl (\p ind -> removeCandidate p final ind) puz intersectIndx
 
---onlyPossibility puzzle ind cand
---    | otherwise = ind
---    where row filter (rowOf )
+countCandidates :: Candidate -> [Cell] -> Int
+countCandidates cand = length . filter (flip hasCand cand)
 
 createEmptyPuzzle :: Puzzle
 createEmptyPuzzle = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
