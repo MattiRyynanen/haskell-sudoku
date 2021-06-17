@@ -52,14 +52,15 @@ removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cell cand = puzzle
     | numCandidates cell == 2 = setFinal puzzle cell final_value
-    | otherwise = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
+    | otherwise = with_removed
     where cell = puzzle !! ind
           final_value = head $ withNo cand $ candidates cell
+          with_removed = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
 
 setFinal :: Puzzle -> Cell -> Candidate -> Puzzle
 setFinal puzzle cell final
-    | isSolved cell && hasCand cell final = puzzle -- Cell has been already solved.
     | hasNoCand cell final = error "Can't set final since it is not in cell candidates."
+    | isSolved cell = puzzle -- Cell has been already solved.
     | otherwise = broadcastFinal withFinal
     where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
           intersectIndx = map (index) $ filter (intersectsEx cell) withFinal
