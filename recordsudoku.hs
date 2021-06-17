@@ -58,16 +58,15 @@ samePosThan a b = index a == index b
 removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cell cand = puzzle
-    | numCandidates cell == 2 = setFinal puzzle cell final_value
-    | otherwise = with_removed
+    | numCandidates cell == 2 = setFinal puzzle cell (head remaining)
+    | otherwise = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
     where cell = puzzle !! ind
-          final_value = head $ withNo cand $ candidates cell
-          with_removed = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
+          remaining = withNo cand $ candidates cell
 
 setFinal :: Puzzle -> Cell -> Candidate -> Puzzle
 setFinal puzzle cell final
+    | isSolved cell = error "Can't set final since it has solved already."
     | hasNoCand cell final = error "Can't set final since it is not in cell candidates."
-    | isSolved cell = puzzle -- Cell has been already solved.
     | otherwise = broadcastFinal withFinal
     where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
           intersectIndx = map (index) $ filter (intersectsEx cell) withFinal
