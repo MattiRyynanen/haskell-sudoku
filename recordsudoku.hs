@@ -55,6 +55,7 @@ setCellCandidate cand cell = cell { candidates = [cand] }
 
 samePosThan a b = index a == index b
 
+-- this will currently check for only possibilities within the index, but not the affected row, column, or block.
 removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cell cand = puzzle
