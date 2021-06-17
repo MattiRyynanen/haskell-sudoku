@@ -7,20 +7,27 @@ type Candidate = Int
 data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving Show
 type Puzzle = [Cell]
 
+rowAt = (`div` 9)
+colAt = (`rem` 9)
+blockAt ind = 3 * (rowAt ind `div` 3) + colAt ind `div` 3
+
 blockOf :: Cell -> Index
-blockOf cell = 3 * (rowOf cell `div` 3) + colOf cell `div` 3
+blockOf = blockAt . index
 
 rowOf :: Cell -> Index
-rowOf cell = index cell `div` 9
+rowOf = rowAt . index
 
 colOf :: Cell -> Index
-colOf cell = index cell `rem` 9
+colOf = colAt . index
 
 posOf :: Cell -> String
 posOf c = concat $ map (\f -> show $ f c) [rowOf, colOf, blockOf]
 
-numCandidates c = length $ candidates c
-isSolved c = numCandidates c == 1
+numCandidates :: Cell -> Int
+numCandidates = length . candidates
+
+isSolved :: Cell -> Bool
+isSolved = (==1) . numCandidates
 
 intersectsEx :: Cell -> Cell -> Bool
 intersectsEx a b = notSamePos && anyIntersection
@@ -65,6 +72,10 @@ setFinal puzzle cell final
     where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
           intersectIndx = map (index) $ filter (intersectsEx cell) withFinal
           broadcastFinal puz = foldl (\p ind -> removeCandidate p final ind) puz intersectIndx
+
+--onlyPossibility puzzle ind cand
+--    | otherwise = ind
+--    where row filter (rowOf )
 
 createEmptyPuzzle :: Puzzle
 createEmptyPuzzle = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
