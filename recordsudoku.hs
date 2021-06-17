@@ -42,7 +42,7 @@ hasNoCand :: Cell -> Candidate -> Bool
 hasNoCand cell cand = not $ hasCand cell cand
 
 tellCell :: Cell -> String
-tellCell c = concat $ map (show) [rowOf c, colOf c, blockOf c]
+tellCell c = (concat $ map (show) [rowOf c, colOf c, blockOf c]) ++ show (candidates c)
 
 applyWhen pred f puzzle = [if pred c then f c else c | c <- puzzle]
 
@@ -59,9 +59,25 @@ removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cell cand = puzzle
     | numCandidates cell == 2 = setFinal puzzle cell (head remaining)
-    | otherwise = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
+    | length onlies == 1 = setFinal puzzle cell (head onlies)
+    | length onlies > 1 = error $ "Found more than one possible final candidate: " ++ tellCell cell ++ showPuzzle puzzle ++ "while removing " ++ show cand
+    | otherwise = with_removed
     where cell = puzzle !! ind
           remaining = withNo cand $ candidates cell
+          with_removed = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
+          onlies = filter (isOnlyPossibilityAt with_removed ind) remaining
+
+hasLength len = (==len) . length . take (succ len)
+hasOne = hasLength 1
+
+isOnlyPossibilityAt puzzle ind cand
+    | hasNoCand (puzzle !! ind) cand = error "Candidate not in the cell."
+    | otherwise = any (onlyOneIn . get) [sameRow, sameCol, sameBlock]
+    where sameRow = (== rowAt ind) . rowOf
+          sameCol = (== colAt ind) . colOf
+          sameBlock = (== blockAt ind) . blockOf
+          get = flip filter puzzle
+          onlyOneIn = hasOne . filter (==cand) . concat . map candidates
 
 setFinal :: Puzzle -> Cell -> Candidate -> Puzzle
 setFinal puzzle cell final
