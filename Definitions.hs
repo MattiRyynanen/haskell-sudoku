@@ -3,6 +3,7 @@ module Definitions (
     Candidate,
     Cell(..),
     Puzzle,
+    createEmptyPuzzle,
     removeCellCandidate, setCellCandidate,
     rowAt, colAt, blockAt,
     rowOf, colOf, blockOf,
@@ -15,6 +16,12 @@ type Index = Int
 type Candidate = Int
 data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving (Show, Eq)
 type Puzzle = [Cell]
+
+createEmptyPuzzle :: Puzzle
+createEmptyPuzzle = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
+
+samePosWith :: Cell -> (Cell -> Bool)
+samePosWith c = (== index c) . index
 
 rowAt :: Index -> Index
 rowAt = (`div` 9)

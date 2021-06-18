@@ -3,7 +3,8 @@ module Snippets (
     hasOne,
     hasTwo,
     without,
-    elemDiff
+    elemDiff,
+    group
 )
 where
 
@@ -31,3 +32,7 @@ without x = filter (/=x)
 
 elemDiff :: Eq a => [a] -> [a] -> [Bool]
 elemDiff = zipWith (/=)
+
+group :: Int -> [a] -> [[a]]
+group _ [] = []
+group c xs = take c xs : group c (drop c xs)
