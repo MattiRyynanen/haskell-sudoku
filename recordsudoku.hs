@@ -4,7 +4,7 @@ import qualified SamplePuzzles
 
 type Index = Int
 type Candidate = Int
-data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving Show
+data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving (Show, Eq)
 type Puzzle = [Cell]
 
 rowAt = (`div` 9)
@@ -137,3 +137,29 @@ showPuzzleHighlights cells highlights = intercalate line (map concat (group 3 ro
 
 printPuzzle :: Puzzle -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
+
+showSolution :: (Puzzle, String, [Bool]) -> String
+showSolution sol = concat [reason, " Unsolved cells = ", show $ length $ filter (not . isSolved) puzzle, "\n", (showPuzzleHighlights puzzle highlights), "\n"]
+    where (puzzle, reason, highlights) = sol
+
+showSolutions :: [(Puzzle, String, [Bool])] -> IO ()
+showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
+
+solutions :: [(Puzzle, String, [Bool])]
+solutions = solve [(pl, "The loaded puzzle.", noHighlights)]
+
+solve puzzles
+    | (all isSolved p) = (p, "Solved!", noHighlights) : puzzles -- solved
+    | p /= b = solve ((b, "Only possible candidate.", elemDiff p b) : puzzles)
+--    | p /= bo = solve ((bo, "Omission: candidates in block on same row or column.", elemDiff p bo) : puzzles)
+--    | p /= oib = solve ((oib, "Omission: candidates within one block.", elemDiff p oib) : puzzles )
+--    | p /= c = solve ((c, "A naked pair.", elemDiff p c) : puzzles)
+    | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
+    where (p, _, _) = head puzzles
+          b = foldl (solveOnlyPossibilityAt) p [0..80]
+          --c = solveNakedPair p
+          --bo = solveBlockOmission p
+          --oib = solveOmissionWithinBlock p
+
+elemDiff :: Eq a => [a] -> [a] -> [Bool]
+elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
