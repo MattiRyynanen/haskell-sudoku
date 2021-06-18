@@ -6,7 +6,7 @@ module Definitions (
     removeCellCandidate, setCellCandidate,
     rowAt, colAt, blockAt,
     rowOf, colOf, blockOf,
-    isSolved, numCandidates, hasCand, hasNoCand
+    isSolved, isUnsolved, hasPair, numCandidates, hasCand, hasNoCand
 ) where
 
 type Index = Int
@@ -36,7 +36,21 @@ numCandidates :: Cell -> Int
 numCandidates = length . candidates
 
 isSolved :: Cell -> Bool
-isSolved = (==1) . numCandidates
+isSolved = hasOne . candidates
+
+isUnsolved :: Cell -> Bool
+isUnsolved = not . hasOne . candidates
+
+hasPair :: Cell -> Bool
+hasPair = hasTwo . candidates
+
+hasOne :: [a] -> Bool
+hasOne [_] = True
+hasOne _ = False
+
+hasTwo :: [a] -> Bool
+hasTwo [_, _] = True
+hasTwo _ = False
 
 removeCellCandidate :: Candidate -> Cell -> Cell
 removeCellCandidate cand cell = cell { candidates = filter (/= cand) (candidates cell) }

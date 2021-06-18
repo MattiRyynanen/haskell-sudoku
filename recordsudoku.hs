@@ -25,7 +25,7 @@ samePosThan a b = index a == index b
 removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cand cell = puzzle
-    | numCandidates cell == 2 = setFinal puzzle cell (head remaining)
+    | hasPair cell = setFinal puzzle cell (head remaining)
     | otherwise = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
     where cell = puzzle !! ind
           remaining = withNo cand $ candidates cell
