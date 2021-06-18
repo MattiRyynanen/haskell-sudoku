@@ -60,17 +60,28 @@ removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cell cand = puzzle
     | numCandidates cell == 2 = setFinal puzzle cell (head remaining)
-    | length onlies == 1 = setFinal puzzle cell (head onlies)
-    | length onlies > 1 = error $ "Found more than one possible final candidate: " ++ tellCell cell ++ showPuzzle puzzle ++ "while removing " ++ show cand
-    | otherwise = with_removed
+--    | length onlies == 1 = setFinal puzzle cell (head onlies)
+--    | length onlies > 1 = error $ "Found more than one possible final candidate: " ++ tellCell cell ++ showPuzzle puzzle ++ "while removing " ++ show cand
+    | otherwise =  with_removed
     where cell = puzzle !! ind
           remaining = withNo cand $ candidates cell
           with_removed = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
-          onlies = filter (isOnlyPossibilityAt with_removed ind) remaining
+--          onlies = searchOnlyPossibilityAt with_removed ind remaining
 
 hasLength len = (==len) . length . take (succ len)
 hasOne = hasLength 1
 
+solveOnlyPossibilityAt puzzle ind
+    | isSolved cell = puzzle
+    | length onlies == 1 = setFinal puzzle cell (head onlies)
+    | length onlies > 1 = error $ intercalate " " ["Found more than one possible final candidate: ", tellCell cell, showPuzzle puzzle]
+    | otherwise = puzzle
+    where onlies = searchOnlyPossibilityAt puzzle ind (candidates cell)
+          cell = (puzzle !! ind)
+
+searchOnlyPossibilityAt puzzle ind cands = filter (isOnlyPossibilityAt puzzle ind) cands
+
+isOnlyPossibilityAt :: Puzzle -> Int -> Candidate -> Bool
 isOnlyPossibilityAt puzzle ind cand
     | hasNoCand (puzzle !! ind) cand = error "Candidate not in the cell."
     | otherwise = any (onlyOneIn . get) [sameRow, sameCol, sameBlock]
