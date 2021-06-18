@@ -7,7 +7,8 @@ module Definitions (
     removeCellCandidate, setCellCandidate,
     rowAt, colAt, blockAt,
     rowOf, colOf, blockOf,
-    isSolved, isUnsolved, hasPair, numCandidates, hasCand, hasNoCand
+    isSolved, isUnsolved, hasPair, numCandidates, hasCand, hasNoCand,
+    sameBy, samePosWith
 ) where
 
 import Snippets
@@ -21,7 +22,10 @@ createEmptyPuzzle :: Puzzle
 createEmptyPuzzle = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
 
 samePosWith :: Cell -> (Cell -> Bool)
-samePosWith c = (== index c) . index
+samePosWith = sameBy index
+
+sameBy :: Eq a => (Cell -> a) -> Cell -> Cell -> Bool
+sameBy f x = (== f x) . f
 
 rowAt :: Index -> Index
 rowAt = (`div` 9)

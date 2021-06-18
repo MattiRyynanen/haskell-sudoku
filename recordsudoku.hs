@@ -12,13 +12,11 @@ intersects a b = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
 intersectsEx :: Cell -> Cell -> Bool
 intersectsEx a b = index a /= index b && intersects a b
 
-samePosThan a b = index a == index b
-
 removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cand cell = puzzle
     | hasPair cell = setFinal puzzle cell (head remaining)
-    | otherwise = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
+    | otherwise = applyWhen (samePosWith cell) (removeCellCandidate cand) puzzle
     where cell = puzzle !! ind
           remaining = without cand $ candidates cell
 
@@ -47,7 +45,7 @@ setFinal puzzle cell final
     | isSolved cell = error "Can't set final since it has solved already."
     | hasNoCand final cell = error "Can't set final since it is not in cell candidates."
     | otherwise = broadcastFinal withFinal
-    where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
+    where withFinal = applyWhen (samePosWith cell) (setCellCandidate final) puzzle
           intersectIndx = map index $ filter (intersectsEx cell) withFinal
           broadcastFinal puz = foldl (`removeCandidate` final) puz intersectIndx
 
