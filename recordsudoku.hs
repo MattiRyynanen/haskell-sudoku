@@ -21,7 +21,7 @@ colOf :: Cell -> Index
 colOf = colAt . index
 
 posOf :: Cell -> String
-posOf c = concat $ map (\f -> show $ f c) [rowOf, colOf, blockOf]
+posOf c = concatMap (\f -> show $ f c) [rowOf, colOf, blockOf]
 
 numCandidates :: Cell -> Int
 numCandidates = length . candidates
@@ -43,12 +43,9 @@ hasNoCand :: Cell -> Candidate -> Bool
 hasNoCand cell cand = not $ hasCand cell cand
 
 tellCell :: Cell -> String
-tellCell c = (concat $ map (show) [rowOf c, colOf c, blockOf c]) ++ show (candidates c)
+tellCell c = unwords [posOf c, show (candidates c)]
 
 applyWhen pred f puzzle = [if pred c then f c else c | c <- puzzle]
-
-applyAt :: Index -> (Cell -> Cell) -> Puzzle -> Puzzle
-applyAt i f puzzle = applyWhen (\c -> index c == i) f puzzle
 
 withNo c = filter (/=c)
 removeCellCandidate cand cell = cell { candidates = withNo cand (candidates cell) }
@@ -70,12 +67,12 @@ hasOne = hasLength 1
 solveOnlyPossibilityAt puzzle ind
     | isSolved cell = puzzle
     | length onlies == 1 = setFinal puzzle cell (head onlies)
-    | length onlies > 1 = error $ intercalate " " ["Found more than one possible final candidate: ", tellCell cell, showPuzzle puzzle]
+    | length onlies > 1 = error $ unwords ["Found more than one possible final candidate: ", tellCell cell, showPuzzle puzzle]
     | otherwise = puzzle
     where onlies = searchOnlyPossibilityAt puzzle ind (candidates cell)
-          cell = (puzzle !! ind)
+          cell = puzzle !! ind
 
-searchOnlyPossibilityAt puzzle ind cands = filter (isOnlyPossibilityAt puzzle ind) cands
+searchOnlyPossibilityAt puzzle ind = filter (isOnlyPossibilityAt puzzle ind)
 
 isOnlyPossibilityAt :: Puzzle -> Int -> Candidate -> Bool
 isOnlyPossibilityAt puzzle ind cand
@@ -94,17 +91,17 @@ setFinal puzzle cell final
     | otherwise = broadcastFinal withFinal
     where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
           intersectIndx = map index $ filter (intersectsEx cell) withFinal
-          broadcastFinal puz = foldl (\p ind -> removeCandidate p final ind) puz intersectIndx
+          broadcastFinal puz = foldl (`removeCandidate` final) puz intersectIndx
 
 countCandidates :: Candidate -> [Cell] -> Int
-countCandidates cand = length . filter (flip hasCand cand)
+countCandidates cand = length . filter (`hasCand` cand)
 
 createEmptyPuzzle :: Puzzle
 createEmptyPuzzle = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
 
 loadPuzzle :: String -> Puzzle
 loadPuzzle puzzle_str = foldl applyValue createEmptyPuzzle indx_values
-    where indx_values = [(i, Data.Char.digitToInt(s)) | (i, s) <- zip [0..] puzzle_str, s /= '.']
+    where indx_values = [(i, Data.Char.digitToInt s) | (i, s) <- zip [0..] puzzle_str, s /= '.']
           applyValue p iv = setFinal p (p !! fst iv) (snd iv)
 
 pl = loadPuzzle SamplePuzzles.xtr_sud_04
@@ -132,8 +129,8 @@ showPuzzle cells = showPuzzleHighlights cells noHighlights
 showPuzzleHighlights :: Puzzle -> [Bool] -> String
 showPuzzleHighlights cells highlights = intercalate line (map concat (group 3 rows))
     where cellContents = [if h then withColor 44 (showCell c) else showCell c | (c, h) <- zip cells highlights]
-          rows = map ('\n':) $ map (intercalate "|") $ group 3 $ map (intercalate " ") $ group 3 cellContents
-          line = '\n' : (intercalate "+" $ replicate 3 (replicate 29 '-'))
+          rows = map (('\n':) . intercalate "|") $ group 3 $ map unwords $ group 3 cellContents
+          line = '\n' : intercalate "+" (replicate 3 (replicate 29 '-'))
 
 printPuzzle :: Puzzle -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
