@@ -9,6 +9,8 @@ module Definitions (
     isSolved, isUnsolved, hasPair, numCandidates, hasCand, hasNoCand
 ) where
 
+import Snippets
+
 type Index = Int
 type Candidate = Int
 data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving (Show, Eq)
@@ -43,14 +45,6 @@ isUnsolved = not . hasOne . candidates
 
 hasPair :: Cell -> Bool
 hasPair = hasTwo . candidates
-
-hasOne :: [a] -> Bool
-hasOne [_] = True
-hasOne _ = False
-
-hasTwo :: [a] -> Bool
-hasTwo [_, _] = True
-hasTwo _ = False
 
 removeCellCandidate :: Candidate -> Cell -> Cell
 removeCellCandidate cand cell = cell { candidates = filter (/= cand) (candidates cell) }

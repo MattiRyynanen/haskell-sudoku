@@ -2,6 +2,7 @@ import Data.List (intercalate)
 import qualified Data.Char
 import qualified SamplePuzzles
 import Definitions
+import Snippets
 
 intersects :: Cell -> Cell -> Bool
 intersects a b = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
@@ -16,10 +17,6 @@ posOf c = concatMap (\f -> show $ f c) [rowOf, colOf, blockOf]
 tellCell :: Cell -> String
 tellCell c = unwords [posOf c, show (candidates c)]
 
-applyWhen p f = map (\x -> if p x then f x else x)
-
-withNo c = filter (/=c)
-
 samePosThan a b = index a == index b
 
 removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
@@ -28,10 +25,7 @@ removeCandidate puzzle cand ind
     | hasPair cell = setFinal puzzle cell (head remaining)
     | otherwise = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
     where cell = puzzle !! ind
-          remaining = withNo cand $ candidates cell
-
-hasLength len = (==len) . length . take (succ len)
-hasOne = hasLength 1
+          remaining = without cand $ candidates cell
 
 solveOnlyPossibilityAt puzzle ind
     | isSolved cell = puzzle
@@ -123,6 +117,3 @@ solve puzzles
           --c = solveNakedPair p
           --bo = solveBlockOmission p
           --oib = solveOmissionWithinBlock p
-
-elemDiff :: Eq a => [a] -> [a] -> [Bool]
-elemDiff xs ys = [x /= y | (x, y) <- zip xs ys]
