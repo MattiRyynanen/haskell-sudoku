@@ -29,11 +29,12 @@ numCandidates = length . candidates
 isSolved :: Cell -> Bool
 isSolved = (==1) . numCandidates
 
-intersectsEx :: Cell -> Cell -> Bool
-intersectsEx a b = notSamePos && anyIntersection
+intersects :: Cell -> Cell -> Bool
+intersects a b = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
     where ops = [rowOf, colOf, blockOf]
-          notSamePos = index a /= index b
-          anyIntersection = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
+
+intersectsEx :: Cell -> Cell -> Bool
+intersectsEx a b = index a /= index b && intersects a b
 
 hasCand :: Cell -> Candidate -> Bool
 hasCand cell cand = cand `elem` (candidates cell)
@@ -55,18 +56,13 @@ setCellCandidate cand cell = cell { candidates = [cand] }
 
 samePosThan a b = index a == index b
 
--- this will currently check for only possibilities within the index, but not the affected row, column, or block.
 removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
 removeCandidate puzzle cand ind
     | isSolved cell || hasNoCand cell cand = puzzle
     | numCandidates cell == 2 = setFinal puzzle cell (head remaining)
---    | length onlies == 1 = setFinal puzzle cell (head onlies)
---    | length onlies > 1 = error $ "Found more than one possible final candidate: " ++ tellCell cell ++ showPuzzle puzzle ++ "while removing " ++ show cand
-    | otherwise =  with_removed
+    | otherwise = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
     where cell = puzzle !! ind
           remaining = withNo cand $ candidates cell
-          with_removed = applyWhen (samePosThan cell) (removeCellCandidate cand) puzzle
---          onlies = searchOnlyPossibilityAt with_removed ind remaining
 
 hasLength len = (==len) . length . take (succ len)
 hasOne = hasLength 1
