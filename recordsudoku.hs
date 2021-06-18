@@ -37,7 +37,7 @@ intersectsEx :: Cell -> Cell -> Bool
 intersectsEx a b = index a /= index b && intersects a b
 
 hasCand :: Cell -> Candidate -> Bool
-hasCand cell cand = cand `elem` (candidates cell)
+hasCand cell cand = cand `elem` candidates cell
 
 hasNoCand :: Cell -> Candidate -> Bool
 hasNoCand cell cand = not $ hasCand cell cand
@@ -85,7 +85,7 @@ isOnlyPossibilityAt puzzle ind cand
           sameCol = (== colAt ind) . colOf
           sameBlock = (== blockAt ind) . blockOf
           get = flip filter puzzle
-          onlyOneIn = hasOne . filter (==cand) . concat . map candidates
+          onlyOneIn = hasOne . filter (==cand) . concatMap candidates
 
 setFinal :: Puzzle -> Cell -> Candidate -> Puzzle
 setFinal puzzle cell final
@@ -93,7 +93,7 @@ setFinal puzzle cell final
     | hasNoCand cell final = error "Can't set final since it is not in cell candidates."
     | otherwise = broadcastFinal withFinal
     where withFinal = applyWhen (samePosThan cell) (setCellCandidate final) puzzle
-          intersectIndx = map (index) $ filter (intersectsEx cell) withFinal
+          intersectIndx = map index $ filter (intersectsEx cell) withFinal
           broadcastFinal puz = foldl (\p ind -> removeCandidate p final ind) puz intersectIndx
 
 countCandidates :: Candidate -> [Cell] -> Int
@@ -139,7 +139,7 @@ printPuzzle :: Puzzle -> IO ()
 printPuzzle cells = putStrLn $ showPuzzle cells
 
 showSolution :: (Puzzle, String, [Bool]) -> String
-showSolution sol = concat [reason, " Unsolved cells = ", show $ length $ filter (not . isSolved) puzzle, "\n", (showPuzzleHighlights puzzle highlights), "\n"]
+showSolution sol = concat [reason, " Unsolved cells = ", show $ length $ filter (not . isSolved) puzzle, "\n", showPuzzleHighlights puzzle highlights, "\n"]
     where (puzzle, reason, highlights) = sol
 
 showSolutions :: [(Puzzle, String, [Bool])] -> IO ()
@@ -149,14 +149,14 @@ solutions :: [(Puzzle, String, [Bool])]
 solutions = solve [(pl, "The loaded puzzle.", noHighlights)]
 
 solve puzzles
-    | (all isSolved p) = (p, "Solved!", noHighlights) : puzzles -- solved
+    | all isSolved p = (p, "Solved!", noHighlights) : puzzles -- solved
     | p /= b = solve ((b, "Only possible candidate.", elemDiff p b) : puzzles)
 --    | p /= bo = solve ((bo, "Omission: candidates in block on same row or column.", elemDiff p bo) : puzzles)
 --    | p /= oib = solve ((oib, "Omission: candidates within one block.", elemDiff p oib) : puzzles )
 --    | p /= c = solve ((c, "A naked pair.", elemDiff p c) : puzzles)
     | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
     where (p, _, _) = head puzzles
-          b = foldl (solveOnlyPossibilityAt) p [0..80]
+          b = foldl solveOnlyPossibilityAt p [0..80]
           --c = solveNakedPair p
           --bo = solveBlockOmission p
           --oib = solveOmissionWithinBlock p
