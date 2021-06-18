@@ -45,7 +45,7 @@ hasNoCand cell cand = not $ hasCand cell cand
 tellCell :: Cell -> String
 tellCell c = unwords [posOf c, show (candidates c)]
 
-applyWhen pred f puzzle = [if pred c then f c else c | c <- puzzle]
+applyWhen p f = map (\x -> if p x then f x else x)
 
 withNo c = filter (/=c)
 removeCellCandidate cand cell = cell { candidates = withNo cand (candidates cell) }
