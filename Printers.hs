@@ -5,7 +5,6 @@ module Printers
     showPuzzle,
     tellCell,
     showSolutions
-    showPuzzle
 )
 where 
 
