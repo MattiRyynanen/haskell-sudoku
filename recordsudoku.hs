@@ -4,6 +4,7 @@ import qualified SamplePuzzles
 import Definitions
 import Snippets
 import Printers
+import Solvers
 
 solveOnlyPossibilityAt puzzle ind
     | isSolved cell = puzzle

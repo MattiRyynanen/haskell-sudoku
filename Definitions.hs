@@ -1,16 +1,4 @@
-module Definitions (
-    Index,
-    Candidate,
-    Cell(..),
-    Puzzle,
-    createEmptyPuzzle, loadPuzzle,
-    removeCellCandidate, setCellCandidate,
-    rowAt, colAt, blockAt,
-    rowOf, colOf, blockOf,
-    isSolved, isUnsolved, hasPair, numCandidates, hasCand, hasNoCand,
-    sameBy, samePosWith,
-    setSolvedAt, removeSolved
-) where
+module Definitions where
 
 import Snippets
 import qualified Data.Char
@@ -90,9 +78,3 @@ loadPuzzle :: String -> Puzzle
 loadPuzzle = zipWith createCell [0..]
     where createCell i n = Cell {index = i, candidates = createCandidatesFrom n}
           createCandidatesFrom s = if s == '.' then [1..9] else [Data.Char.digitToInt s]
-
-removeSolved :: [Cell] -> [Cell]
-removeSolved puzzle = map removeCandidates puzzle
-    where solved = filter isSolved puzzle
-          candidatesToRemoveFor cell = concatMap candidates $ filter (intersectsEx cell) solved
-          removeCandidates cell = foldl (flip removeCellCandidate) cell (candidatesToRemoveFor cell)
