@@ -6,26 +6,6 @@ import Snippets
 import Printers
 import Solvers
 
-solveOnlyPossibilityAt puzzle ind
-    | isSolved cell = puzzle
-    | length onlies == 1 = setSolvedAt (head onlies) ind puzzle
-    | length onlies > 1 = error $ unwords ["Found more than one possible final candidate: ", tellCell cell, showPuzzle puzzle]
-    | otherwise = puzzle
-    where onlies = searchOnlyPossibilityAt puzzle ind (candidates cell)
-          cell = puzzle !! ind
-
-searchOnlyPossibilityAt puzzle ind = filter (isOnlyPossibilityAt puzzle ind)
-
-isOnlyPossibilityAt :: Puzzle -> Int -> Candidate -> Bool
-isOnlyPossibilityAt puzzle ind cand
-    | hasNoCand cand (puzzle !! ind) = error "Candidate not in the cell."
-    | otherwise = any (onlyOneIn . get) [sameRow, sameCol, sameBlock]
-    where sameRow = (== rowAt ind) . rowOf
-          sameCol = (== colAt ind) . colOf
-          sameBlock = (== blockAt ind) . blockOf
-          get = flip filter puzzle
-          onlyOneIn = hasOne . filter (==cand) . concatMap candidates
-
 pl = loadPuzzle SamplePuzzles.xtr_sud_04
 
 solutions :: [(Puzzle, String, [Bool])]
@@ -41,7 +21,7 @@ solve puzzles
     | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
     where (p, _, _) = head puzzles
           a = removeSolved p
-          b = foldl solveOnlyPossibilityAt p [0..80]
+          b = solveOnlyPossibility p
           --c = solveNakedPair p
           --bo = solveBlockOmission p
           --oib = solveOmissionWithinBlock p
