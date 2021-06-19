@@ -13,6 +13,10 @@ solutions = solve [(pl, "The loaded puzzle.", noHighlights)]
 
 (px, _, _) = head solutions
 
+applyWhileReduced f puzzle =
+    let reduced = f puzzle
+    in if reduced == puzzle then puzzle else applyWhileReduced f reduced
+
 solve puzzles
     | all isSolved p = (p, "Solved!", noHighlights) : puzzles -- solved
     | p /= a = solve ((a, "Removed candidates by solved values.", elemDiff p a) : puzzles)
@@ -22,7 +26,7 @@ solve puzzles
 --    | p /= c = solve ((c, "A naked pair.", elemDiff p c) : puzzles)
     | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
     where (p, _, _) = head puzzles
-          a = removeSolved p
+          a = applyWhileReduced removeSolved p
           b = solveOnlyPossibility p
           --c = solveNakedPair p
           bo = solveBlockOmissions p

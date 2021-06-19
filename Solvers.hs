@@ -43,7 +43,7 @@ isOnlyPossibilityAt puzzle ind cand
 -- Block omission
 
 solveBlockOmissions :: Puzzle -> Puzzle
-solveBlockOmissions puzzle = foldl (\p r -> r p) puzzle (rowRemovers ++ colRemovers)
+solveBlockOmissions puzzle = foldr (\r p -> r p) puzzle (rowRemovers ++ colRemovers)
     where rowRemovers = concatMap (searchBlockOmissionBy rowOf puzzle) [0..8]
           colRemovers = concatMap (searchBlockOmissionBy colOf puzzle) [0..8]
 
