@@ -3,15 +3,17 @@ module Definitions (
     Candidate,
     Cell(..),
     Puzzle,
-    createEmptyPuzzle,
+    createEmptyPuzzle, loadPuzzle,
     removeCellCandidate, setCellCandidate,
     rowAt, colAt, blockAt,
     rowOf, colOf, blockOf,
     isSolved, isUnsolved, hasPair, numCandidates, hasCand, hasNoCand,
-    sameBy, samePosWith
+    sameBy, samePosWith,
+    removeSolved
 ) where
 
 import Snippets
+import qualified Data.Char
 
 type Index = Int
 type Candidate = Int
@@ -71,3 +73,26 @@ hasNoCand cand cell = cand `notElem` candidates cell
 
 countCandidates :: Candidate -> [Cell] -> Int
 countCandidates cand = length . filter (hasCand cand)
+
+removeCandidateAt :: Candidate -> Index -> Puzzle -> Puzzle
+removeCandidateAt cand ind = applyWhen ((==ind) . index) (removeCellCandidate cand)
+
+setSolvedAt :: Candidate -> Index -> Puzzle -> Puzzle
+setSolvedAt cand ind = applyWhen ((==ind) . index) (setCellCandidate cand)
+
+intersects :: Cell -> Cell -> Bool
+intersects a b = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
+    where ops = [rowOf, colOf, blockOf]
+
+intersectsEx :: Cell -> Cell -> Bool
+intersectsEx a b = index a /= index b && intersects a b
+
+loadPuzzle :: String -> Puzzle
+loadPuzzle = zipWith createCell [0..]
+    where createCell i n = Cell {index = i, candidates = createCandidatesFrom n}
+          createCandidatesFrom s = if s == '.' then [1..9] else [Data.Char.digitToInt s]
+
+removeSolved puzzle = map removeCandidates puzzle
+    where solved = filter isSolved puzzle
+          candidatesToRemoveFor cell = concatMap candidates $ filter (intersectsEx cell) solved
+          removeCandidates cell = foldl (flip removeCellCandidate) cell (candidatesToRemoveFor cell)

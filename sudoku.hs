@@ -65,7 +65,7 @@ blockIndicesAt :: Int -> [Int]
 blockIndicesAt = blockIndices . blockOf
 
 intersecting :: Int -> [Int]
-intersecting ind = concat $ map ($ind) [rowIndicesAt, colIndicesAt, blockIndicesAt]
+intersecting ind = concatMap ($ind) [rowIndicesAt, colIndicesAt, blockIndicesAt]
 
 intersectingEx :: Int -> [Int]
 intersectingEx ind = withNo ind $ intersecting ind
