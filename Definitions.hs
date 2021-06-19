@@ -81,8 +81,7 @@ setSolvedAt :: Candidate -> Index -> Puzzle -> Puzzle
 setSolvedAt cand ind = applyWhen ((==ind) . index) (setCellCandidate cand)
 
 intersects :: Cell -> Cell -> Bool
-intersects a b = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
-    where ops = [rowOf, colOf, blockOf]
+intersects a b = any (($b) . ($a) . sameBy) [rowOf, colOf, blockOf]
 
 intersectsEx :: Cell -> Cell -> Bool
 intersectsEx a b = index a /= index b && intersects a b
