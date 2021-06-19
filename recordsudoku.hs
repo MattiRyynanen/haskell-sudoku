@@ -5,24 +5,9 @@ import Definitions
 import Snippets
 import Printers
 
-intersects :: Cell -> Cell -> Bool
-intersects a b = or $ zipWith (==) (map ($ a) ops) (map ($ b) ops)
-    where ops = [rowOf, colOf, blockOf]
-
-intersectsEx :: Cell -> Cell -> Bool
-intersectsEx a b = index a /= index b && intersects a b
-
-removeCandidate :: Puzzle -> Candidate -> Index -> Puzzle
-removeCandidate puzzle cand ind
-    | isSolved cell || hasNoCand cand cell = puzzle
-    | hasPair cell = setFinal puzzle cell (head remaining)
-    | otherwise = applyWhen (samePosWith cell) (removeCellCandidate cand) puzzle
-    where cell = puzzle !! ind
-          remaining = without cand $ candidates cell
-
 solveOnlyPossibilityAt puzzle ind
     | isSolved cell = puzzle
-    | length onlies == 1 = setFinal puzzle cell (head onlies)
+    | length onlies == 1 = setSolvedAt (head onlies) ind puzzle
     | length onlies > 1 = error $ unwords ["Found more than one possible final candidate: ", tellCell cell, showPuzzle puzzle]
     | otherwise = puzzle
     where onlies = searchOnlyPossibilityAt puzzle ind (candidates cell)
@@ -39,20 +24,6 @@ isOnlyPossibilityAt puzzle ind cand
           sameBlock = (== blockAt ind) . blockOf
           get = flip filter puzzle
           onlyOneIn = hasOne . filter (==cand) . concatMap candidates
-
-setFinal :: Puzzle -> Cell -> Candidate -> Puzzle
-setFinal puzzle cell final
-    | isSolved cell = error "Can't set final since it has solved already."
-    | hasNoCand final cell = error "Can't set final since it is not in cell candidates."
-    | otherwise = broadcastFinal withFinal
-    where withFinal = applyWhen (samePosWith cell) (setCellCandidate final) puzzle
-          intersectIndx = map index $ filter (intersectsEx cell) withFinal
-          broadcastFinal puz = foldl (`removeCandidate` final) puz intersectIndx
-
---loadPuzzle :: String -> Puzzle
---loadPuzzle puzzle_str = foldl applyValue createEmptyPuzzle indx_values
---    where indx_values = [(i, Data.Char.digitToInt s) | (i, s) <- zip [0..] puzzle_str, s /= '.']
---          applyValue p iv = setFinal p (p !! fst iv) (snd iv)
 
 pl = loadPuzzle SamplePuzzles.xtr_sud_04
 

@@ -9,7 +9,7 @@ module Definitions (
     rowOf, colOf, blockOf,
     isSolved, isUnsolved, hasPair, numCandidates, hasCand, hasNoCand,
     sameBy, samePosWith,
-    removeSolved
+    setSolvedAt, removeSolved
 ) where
 
 import Snippets
@@ -92,6 +92,7 @@ loadPuzzle = zipWith createCell [0..]
     where createCell i n = Cell {index = i, candidates = createCandidatesFrom n}
           createCandidatesFrom s = if s == '.' then [1..9] else [Data.Char.digitToInt s]
 
+removeSolved :: [Cell] -> [Cell]
 removeSolved puzzle = map removeCandidates puzzle
     where solved = filter isSolved puzzle
           candidatesToRemoveFor cell = concatMap candidates $ filter (intersectsEx cell) solved
