@@ -1,12 +1,6 @@
-module Snippets (
-    applyWhen,
-    hasOne,
-    hasTwo,
-    without,
-    elemDiff,
-    group
-)
-where
+module Snippets where
+
+import qualified Data.Set
 
 applyWhen :: (b -> Bool) -> (b -> b) -> [b] -> [b]
 applyWhen pred func = map (applyIf pred func)
@@ -36,3 +30,10 @@ elemDiff = zipWith (/=)
 group :: Int -> [a] -> [[a]]
 group _ [] = []
 group c xs = take c xs : group c (drop c xs)
+
+unique :: Ord a => [a] -> [a]
+unique = Data.Set.toList . Data.Set.fromList
+
+allSame :: Eq a => [a] -> Bool
+allSame [] = error "Can't check for empty list."
+allSame xs = all (== head xs) $ tail xs

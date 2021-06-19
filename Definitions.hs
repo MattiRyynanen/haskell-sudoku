@@ -38,6 +38,9 @@ blockOf = blockAt . index
 numCandidates :: Cell -> Int
 numCandidates = length . candidates
 
+uniqueCandidates :: [Cell] -> [Candidate]
+uniqueCandidates = unique . concatMap candidates
+
 isSolved :: Cell -> Bool
 isSolved = hasOne . candidates
 
@@ -73,6 +76,27 @@ intersects a b = any (($b) . ($a) . sameBy) [rowOf, colOf, blockOf]
 
 intersectsEx :: Cell -> Cell -> Bool
 intersectsEx a b = index a /= index b && intersects a b
+
+isOnSameRow :: [Cell] -> Bool
+isOnSameRow = allSame . map rowOf
+
+isOnSameCol :: [Cell] -> Bool
+isOnSameCol = allSame . map colOf
+
+withCandidate :: Candidate -> [Cell] -> [Cell]
+withCandidate = filter . hasCand
+
+--jointCol :: [Cell] -> Maybe Index
+--jointCol cells
+--    | allSame indx = Just $ head indx
+--    | otherwise = Nothing
+--    where indx = map colOf cells
+
+joint :: (Cell -> Index) -> [Cell] -> Maybe Index
+joint f cells
+    | allSame indx = Just $ head indx
+    | otherwise = Nothing
+    where indx = map f cells
 
 loadPuzzle :: String -> Puzzle
 loadPuzzle = zipWith createCell [0..]
