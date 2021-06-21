@@ -40,7 +40,8 @@ isOnlyPossibilityAt puzzle ind cand
           get = flip filter puzzle
           onlyOneIn = hasOne . filter (==cand) . concatMap candidates
 
--- Block omission
+-- Block omission, candidates within one block on one row or column, only.
+-- Can remove the possible candidates on that row or column on adjacent block.
 
 solveBlockOmissions :: Puzzle -> Puzzle
 solveBlockOmissions puzzle = foldr (\r p -> r p) puzzle (rowRemovers ++ colRemovers)
@@ -49,36 +50,42 @@ solveBlockOmissions puzzle = foldr (\r p -> r p) puzzle (rowRemovers ++ colRemov
 
 searchBlockOmissionBy :: (Cell -> Index) -> Puzzle -> Index -> [Puzzle -> Puzzle]
 searchBlockOmissionBy indexer puzzle blockIndex = removers
-    where unsolved = filter ((==blockIndex) . blockOf) $ filter isUnsolved puzzle
+    where unsolved = filterWith [(==blockIndex) . blockOf, isUnsolved] puzzle
           candidates = uniqueCandidates unsolved
           check cand = joint indexer (withCandidate cand unsolved)
           removerFor ind cand = applyWhen (\c -> indexer c == ind && blockOf c /= blockIndex) (removeCellCandidate cand)
           removers = [removerFor (fromJust $ check c) c | c <- candidates, isJust $ check c]
 
+-- Block omission: row or column has a candidate only within one block, any other
+-- candidate in that block can be removed.
+
+solveOmitCandidateInOneBlock :: Puzzle -> Puzzle
+solveOmitCandidateInOneBlock puzzle = foldr (\r p -> r p) puzzle removers
+    where removers = concatMap (searchOmitCandidateInOneBlock puzzle) (concatMap selectors [rowOf, colOf])
+          selectors f = map (\i -> (==i) . f) [0..8]
+
+searchOmitCandidateInOneBlock :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchOmitCandidateInOneBlock puzzle p = removers
+    where unsolved = filterWith [p, isUnsolved] puzzle
+          candidates = uniqueCandidates unsolved
+          check cand = joint blockOf (withCandidate cand unsolved)
+          removerFor blockInd cand = applyWhen (\c -> not (p c) && blockOf c == blockInd) (removeCellCandidate cand)
+          removers = [removerFor (fromJust $ check c) c | c <- candidates, isJust $ check c]
+
 {-
+solveOmissionWithinBlock :: Puzzle -> Puzzle
+solveOmissionWithinBlock cells
+    | null oms = cells
+    | otherwise = applyWhenIndex (\i -> elem i removalInds) (\cell -> withNo candidateToRemove cell) cells
+    where rowsAndCols = concat [map rowIndices [0..8], map colIndices [0..8]]
+          oms = concat [searchOmissionWithinBlock cand indx cells | cand <- [1..9], indx <- rowsAndCols]
+          (candidateToRemove, removalInds) = head oms
 
-solveBlockOmission :: Puzzle -> Puzzle
-solveBlockOmission puzzle
-    | null oms = puzzle -- no omissions found
-    | otherwise = applyWhen ((`elem` removalInds) . index) (removeCellCandidate cand) puzzle
-    where oms = concatMap (`searchBlockOmission` puzzle) [0..8]
-          (cand, indx) = head oms
-          h_indx = head indx
-          blockIndex = blockAt h_indx
-          inAnotherBlock ind = blockAt ind /= blockIndex
-          f_indx = if isOnSameRow indx then rowIndicesAt else colIndicesAt
-          removalInds = filter inAnotherBlock $ f_indx h_indx
-
-searchBlockOmission :: Index -> Puzzle -> [(Candidate, [Index])]
-searchBlockOmission blockIndex cells = [(cand, indx) | (cand, indx) <- zip candidates (map withCand candidates), hasRemovals cand indx]
-    where bi = blockIndices blockIndex
-          unsolved_cells = [(c, i) | (c, i) <- zip (getAt bi cells) bi, cellUnsolved c]
-          candidates = uniqueCandidates $ map fst unsolved_cells
-          withCand cand = [i | (c, i) <- unsolved_cells, hasCand cand c]
-          inAnotherBlock ind = blockOf ind /= blockIndex
-          hasRemovalCand indx c = any (hasCand c) $ getAt (filter inAnotherBlock indx) cells
-          onSameRow c indx = isOnSameRow indx && hasRemovalCand (rowIndicesAt $ head indx) c
-          onSameCol c indx = isOnSameCol indx && hasRemovalCand (colIndicesAt $ head indx) c
-          hasRemovals cand indx = onSameRow cand indx || onSameCol cand indx
-
+searchOmissionWithinBlock :: Int -> [Index] -> Puzzle -> [(Candidate, [Index])]
+searchOmissionWithinBlock cand indx cells = if withinOneBlock && length r > 0 then [(cand, r)] else []
+    where candInds = [i | (c, i) <- zip (getAt indx cells) indx, hasCand cand c]
+          blockIds = unique $ map (blockOf) candInds
+          withinOneBlock = length blockIds == 1
+          bi = blockIndices (head blockIds)
+          r = [i | (c, i) <- zip (getAt bi cells) bi, hasCand cand c, not $ elem i indx]
 -}

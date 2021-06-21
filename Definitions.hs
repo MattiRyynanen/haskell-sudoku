@@ -77,20 +77,12 @@ intersects a b = any (($b) . ($a) . sameBy) [rowOf, colOf, blockOf]
 intersectsEx :: Cell -> Cell -> Bool
 intersectsEx a b = index a /= index b && intersects a b
 
-isOnSameRow :: [Cell] -> Bool
-isOnSameRow = allSame . map rowOf
-
-isOnSameCol :: [Cell] -> Bool
-isOnSameCol = allSame . map colOf
-
 withCandidate :: Candidate -> [Cell] -> [Cell]
 withCandidate = filter . hasCand
 
---jointCol :: [Cell] -> Maybe Index
---jointCol cells
---    | allSame indx = Just $ head indx
---    | otherwise = Nothing
---    where indx = map colOf cells
+filterWith :: [Cell -> Bool] -> [Cell] -> [Cell]
+filterWith = filter . allConds
+    where allConds ps c = all (\ p -> p c) ps
 
 joint :: (Cell -> Index) -> [Cell] -> Maybe Index
 joint f cells
