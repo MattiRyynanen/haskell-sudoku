@@ -53,6 +53,9 @@ hasPair = hasTwo . candidates
 removeCellCandidate :: Candidate -> Cell -> Cell
 removeCellCandidate cand cell = cell { candidates = filter (/= cand) (candidates cell) }
 
+removeCellCandidates :: [Candidate] -> Cell -> Cell
+removeCellCandidates cands cell = cell { candidates = filter (`notElem` cands) (candidates cell) }
+
 setCellCandidate :: Candidate -> Cell -> Cell
 setCellCandidate cand cell = cell { candidates = [cand] }
 

@@ -76,10 +76,16 @@ searchOmitCandidateInOneBlock puzzle p = removers
 -- If row, column, or block contains two pairs with exactly same candidates,
 -- the numbers in elsewhere within the section can be removed.
 
-searchNakedPair puzzle p = filterWith [hasRemovals, isNakedPair] unique_pairs
+solveNakedPairs :: Puzzle -> Puzzle
+solveNakedPairs puzzle = foldr (\r p -> r p) puzzle removers
+    where sets = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
+          removers = concatMap (searchNakedPair puzzle) sets
+
+searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals, isNakedPair] unique_pairs
     where unsolved = filterWith [p, isUnsolved] puzzle
           pair_cells = filter hasPair unsolved
           unique_pairs = unique $ map candidates pair_cells
           isNakedPair pair = hasTwo $ filter (==pair) $ map candidates pair_cells
           hasRemovals pair = any (\cell -> hasAnyCand pair cell && candidates cell /= pair) unsolved
-
+          removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
