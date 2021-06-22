@@ -62,6 +62,9 @@ hasCand cand cell = cand `elem` candidates cell
 hasNoCand :: Candidate -> Cell -> Bool
 hasNoCand cand cell = cand `notElem` candidates cell
 
+hasAnyCand :: [Candidate] -> Cell -> Bool
+hasAnyCand cands cell = any (`hasCand` cell) cands
+
 countCandidates :: Candidate -> [Cell] -> Int
 countCandidates cand = length . filter (hasCand cand)
 

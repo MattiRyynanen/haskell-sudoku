@@ -72,20 +72,14 @@ searchOmitCandidateInOneBlock puzzle p = removers
           removerFor blockInd cand = applyWhen (\c -> not (p c) && blockOf c == blockInd) (removeCellCandidate cand)
           removers = [removerFor (fromJust $ check c) c | c <- candidates, isJust $ check c]
 
-{-
-solveOmissionWithinBlock :: Puzzle -> Puzzle
-solveOmissionWithinBlock cells
-    | null oms = cells
-    | otherwise = applyWhenIndex (\i -> elem i removalInds) (\cell -> withNo candidateToRemove cell) cells
-    where rowsAndCols = concat [map rowIndices [0..8], map colIndices [0..8]]
-          oms = concat [searchOmissionWithinBlock cand indx cells | cand <- [1..9], indx <- rowsAndCols]
-          (candidateToRemove, removalInds) = head oms
+-- Solving Naked pair
+-- If row, column, or block contains two pairs with exactly same candidates,
+-- the numbers in elsewhere within the section can be removed.
 
-searchOmissionWithinBlock :: Int -> [Index] -> Puzzle -> [(Candidate, [Index])]
-searchOmissionWithinBlock cand indx cells = if withinOneBlock && length r > 0 then [(cand, r)] else []
-    where candInds = [i | (c, i) <- zip (getAt indx cells) indx, hasCand cand c]
-          blockIds = unique $ map (blockOf) candInds
-          withinOneBlock = length blockIds == 1
-          bi = blockIndices (head blockIds)
-          r = [i | (c, i) <- zip (getAt bi cells) bi, hasCand cand c, not $ elem i indx]
--}
+searchNakedPair puzzle p = filterWith [hasRemovals, isNakedPair] unique_pairs
+    where unsolved = filterWith [p, isUnsolved] puzzle
+          pair_cells = filter hasPair unsolved
+          unique_pairs = unique $ map candidates pair_cells
+          isNakedPair pair = hasTwo $ filter (==pair) $ map candidates pair_cells
+          hasRemovals pair = any (\cell -> hasAnyCand pair cell && candidates cell /= pair) unsolved
+
