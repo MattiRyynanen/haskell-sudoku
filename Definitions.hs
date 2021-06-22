@@ -80,10 +80,6 @@ intersectsEx a b = index a /= index b && intersects a b
 withCandidate :: Candidate -> [Cell] -> [Cell]
 withCandidate = filter . hasCand
 
-filterWith :: [Cell -> Bool] -> [Cell] -> [Cell]
-filterWith = filter . allConds
-    where allConds ps c = all (\ p -> p c) ps
-
 joint :: (Cell -> Index) -> [Cell] -> Maybe Index
 joint f cells
     | allSame indx = Just $ head indx

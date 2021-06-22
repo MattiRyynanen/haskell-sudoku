@@ -37,3 +37,7 @@ unique = Data.Set.toList . Data.Set.fromList
 allSame :: Eq a => [a] -> Bool
 allSame [] = error "Can't check for empty list."
 allSame xs = all (== head xs) $ tail xs
+
+filterWith :: [a -> Bool] -> [a] -> [a]
+filterWith = filter . allConds
+    where allConds ps c = all (\ p -> p c) ps
