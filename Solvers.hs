@@ -43,8 +43,11 @@ isOnlyPossibilityAt puzzle ind cand
 -- Block omission, candidates within one block on one row or column, only.
 -- Can remove the possible candidates on that row or column on adjacent block.
 
+applyRemover :: Puzzle -> (Puzzle -> Puzzle) -> Puzzle
+applyRemover puzzle remover = remover puzzle
+
 solveBlockOmissions :: Puzzle -> Puzzle
-solveBlockOmissions puzzle = foldr (\r p -> r p) puzzle (rowRemovers ++ colRemovers)
+solveBlockOmissions puzzle = foldl applyRemover puzzle (rowRemovers ++ colRemovers)
     where rowRemovers = concatMap (searchBlockOmissionBy rowOf puzzle) [0..8]
           colRemovers = concatMap (searchBlockOmissionBy colOf puzzle) [0..8]
 
@@ -60,7 +63,7 @@ searchBlockOmissionBy indexer puzzle blockIndex = removers
 -- candidate in that block can be removed.
 
 solveOmitCandidateInOneBlock :: Puzzle -> Puzzle
-solveOmitCandidateInOneBlock puzzle = foldr (\r p -> r p) puzzle removers
+solveOmitCandidateInOneBlock puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchOmitCandidateInOneBlock puzzle) (concatMap selectors [rowOf, colOf])
           selectors f = map (\i -> (==i) . f) [0..8]
 
@@ -77,7 +80,7 @@ searchOmitCandidateInOneBlock puzzle p = removers
 -- the numbers in elsewhere within the section can be removed.
 
 solveNakedPairs :: Puzzle -> Puzzle
-solveNakedPairs puzzle = foldr (\r p -> r p) puzzle removers
+solveNakedPairs puzzle = foldl applyRemover puzzle removers
     where sets = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
           removers = concatMap (searchNakedPair puzzle) sets
 
@@ -89,3 +92,9 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
           isNakedPair pair = hasTwo $ filter (==pair) $ map candidates pair_cells
           hasRemovals pair = any (\cell -> hasAnyCand pair cell && candidates cell /= pair) unsolved
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
+
+-- Double block omission.
+-- On row or column of blocks:
+-- for a candidate that is not solved in any of the blocks
+-- if two of the blocks has candidate only on the same two rows (or, cols), the candidate
+-- can be removed in the third block on those rows (columns).

@@ -19,7 +19,8 @@ hasTwo [_, _] = True
 hasTwo _ = False
 
 hasLength :: Int -> [a] -> Bool
-hasLength len = (==len) . length . take (succ len)
+hasLength 0 xs = null xs
+hasLength len xs = hasOne $ dropWhile (<len) $ zipWith const [1 ..] xs
 
 without :: Eq a => a -> [a] -> [a]
 without x = filter (/=x)
