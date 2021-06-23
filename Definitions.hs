@@ -35,6 +35,12 @@ colOf = colAt . index
 blockOf :: Cell -> Index
 blockOf = blockAt . index
 
+blockRowOf :: Cell -> Index
+blockRowOf = (`div` 3) . blockOf
+
+blockColOf :: Cell -> Index
+blockColOf = (`rem` 3) . blockOf
+
 numCandidates :: Cell -> Int
 numCandidates = length . candidates
 

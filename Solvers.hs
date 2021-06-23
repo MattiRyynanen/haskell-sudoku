@@ -98,3 +98,18 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
 -- for a candidate that is not solved in any of the blocks
 -- if two of the blocks has candidate only on the same two rows (or, cols), the candidate
 -- can be removed in the third block on those rows (columns).
+
+searchDoubleBlockOmission puzzle = byRow ++ byCol
+    where byRow = concat [searchDoubleBlockOmission2 puzzle b rowOf | b <- [[0,1,2], [3,4,5], [6,7,8]]]
+          byCol = concat [searchDoubleBlockOmission2 puzzle b colOf | b <- [[0,3,6], [1,4,7], [2,5,8]]]
+
+searchDoubleBlockOmission2 puzzle bis sel = pos
+    where cells = filter ((`elem` bis) . blockOf) puzzle
+          solved = unique $ concatMap candidates $ filter isSolved cells
+          unsolvedCands = filter (`notElem` solved) [1..9]
+          candPosInBlock cand bi = unique $ [sel c | c <- cells, hasCand cand c, blockOf c == bi]
+          candPos cand = map (candPosInBlock cand) bis
+          pos = [(cand, candPos cand) | cand <- unsolvedCands]
+
+hasDoubleBlockPair xs = length pairs >= 2 && length (unique pairs) < length pairs
+    where pairs = filter ((==2) . length) xs
