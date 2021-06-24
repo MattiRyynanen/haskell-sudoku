@@ -98,12 +98,20 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
 -- *Main> searchHiddenPair px ((==7) . rowOf)
 -- [(2,[65,67]),(8,[65,67])]
 
-searchHiddenPair puzzle p = twoPosCands
+solveHiddenPair :: Puzzle -> Puzzle
+solveHiddenPair puzzle = foldl applyRemover puzzle removers
+    where ps = concatMap (searchHiddenPair puzzle) setSelectors
+          removerFor p = applyWhen (\c -> index c `elem` fst p) (setCellCandidates $ snd p)
+          removers = map removerFor ps
+
+searchHiddenPair puzzle p = posCands
     where unsolved = filterWith [p, isUnsolved] puzzle
           unique_cands = unique $ concatMap candidates unsolved
-          indicesFor cand = map index $ filter (hasCand cand) unsolved
-          inTwoPlaces = (==2) . length . snd
-          twoPosCands = filter inTwoPlaces [(cand, indicesFor cand) | cand <- unique_cands]
+          positionsFor cand = map index $ filter (hasCand cand) unsolved
+          twoPosCands = [(positionsFor cand, cand) | cand <- unique_cands, hasTwo $ positionsFor cand]
+          unique_positions = unique $ map fst twoPosCands
+          candsForP p = map snd $ filter ((==p) . fst) twoPosCands
+          posCands = [(p, candsForP p) | p <- unique_positions, hasTwo $ candsForP p]
 
 -- Double block omission.
 -- Hmm, looks like this is automatically handled with the above omissions so perhaps there's no need.

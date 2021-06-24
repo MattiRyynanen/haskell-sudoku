@@ -65,6 +65,9 @@ removeCellCandidates cands cell = cell { candidates = filter (`notElem` cands) (
 setCellCandidate :: Candidate -> Cell -> Cell
 setCellCandidate cand cell = cell { candidates = [cand] }
 
+setCellCandidates :: [Candidate] -> Cell -> Cell
+setCellCandidates cands cell = cell { candidates = cands }
+
 hasCand :: Candidate -> Cell -> Bool
 hasCand cand cell = cand `elem` candidates cell
 

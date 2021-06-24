@@ -24,6 +24,7 @@ solve puzzles
     | p /= bo = solve ((bo, "Omission: candidates in block on same row or column.", elemDiff p bo) : puzzles)
     | p /= oib = solve ((oib, "Omission: candidates within one block.", elemDiff p oib) : puzzles )
     | p /= c = solve ((c, "Naked pairs.", elemDiff p c) : puzzles)
+    | p /= hp = solve ((hp, "Hidden pairs.", elemDiff p hp) : puzzles)
     | otherwise = (p, "No solution yet.", noHighlights) : puzzles -- no solution
     where (p, _, _) = head puzzles
           a = applyWhileReduced removeSolved p
@@ -31,3 +32,4 @@ solve puzzles
           c = solveNakedPairs p
           bo = solveBlockOmissions p
           oib = solveOmitCandidateInOneBlock p
+          hp = solveHiddenPair p
