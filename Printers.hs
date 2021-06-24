@@ -1,7 +1,6 @@
 module Printers 
 (
     printPuzzle,
-    noHighlights,
     showPuzzle,
     tellCell,
     showSolutions
@@ -12,14 +11,11 @@ import Data.List (intercalate)
 import Definitions
 import Snippets
 
-noHighlights :: [Bool]
-noHighlights = replicate (9 * 9) False
+showSolution :: (Puzzle, String, Puzzle) -> String
+showSolution sol = concat [reason, " Unsolved cells = ", show $ length $ filter (not . isSolved) puzzle, "\n", showPuzzleChange puzzle prev, "\n"]
+    where (puzzle, reason, prev) = sol
 
-showSolution :: (Puzzle, String, [Bool]) -> String
-showSolution sol = concat [reason, " Unsolved cells = ", show $ length $ filter (not . isSolved) puzzle, "\n", showPuzzleHighlights puzzle highlights, "\n"]
-    where (puzzle, reason, highlights) = sol
-
-showSolutions :: [(Puzzle, String, [Bool])] -> IO ()
+showSolutions :: [(Puzzle, String, Puzzle)] -> IO ()
 showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
 
 withColor :: Show a => a -> [Char] -> [Char]
@@ -33,11 +29,22 @@ showCell c
     where cellToStr sep c = concat $ [if hasCand cand c then show cand else sep | cand <- [1..9]]
 
 showPuzzle :: Puzzle -> String
-showPuzzle cells = showPuzzleHighlights cells noHighlights
+showPuzzle cells = showPuzzleChange cells cells
 
-showPuzzleHighlights :: Puzzle -> [Bool] -> String
-showPuzzleHighlights cells highlights = intercalate line (map concat (group 3 rows))
-    where cellContents = [if h then withColor 44 (showCell c) else showCell c | (c, h) <- zip cells highlights]
+showCellChange :: Cell -> Cell -> String
+showCellChange cur prev = concatMap (showCandChange (candidates cur) (candidates prev)) [1..9]
+
+showCandChange cur prev cand 
+    | cand `elem` cur && hasOne cur = withColor 32 $ show cand
+    | cand `elem` cur && hasTwo cur = withColor 33 $ show cand
+    | cand `elem` cur = show cand
+    | cand `elem` prev = withColor 31 $ show cand
+    | hasOne cur && cur == prev = " "
+    | otherwise = withColor 34 "."
+
+showPuzzleChange :: Puzzle -> Puzzle -> String
+showPuzzleChange cells previous = intercalate line (map concat (group 3 rows))
+    where cellContents = [showCellChange c p | (c, p) <- zip cells previous]
           rows = map (('\n':) . intercalate "|") $ group 3 $ map unwords $ group 3 cellContents
           line = '\n' : intercalate "+" (replicate 3 (replicate 29 '-'))
 
