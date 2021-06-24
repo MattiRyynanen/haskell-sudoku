@@ -94,6 +94,7 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
 
 -- Double block omission.
+-- Hmm, looks like this is automatically handled with the above omissions so perhaps there's no need.
 -- On row or column of blocks:
 -- for a candidate that is not solved in any of the blocks
 -- if two of the blocks has candidate only on the same two rows (or, cols), the candidate
