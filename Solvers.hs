@@ -79,10 +79,12 @@ searchOmitCandidateInOneBlock puzzle p = removers
 -- If row, column, or block contains two pairs with exactly same candidates,
 -- the numbers in elsewhere within the section can be removed.
 
+setSelectors :: [Cell -> Bool]
+setSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
+
 solveNakedPairs :: Puzzle -> Puzzle
 solveNakedPairs puzzle = foldl applyRemover puzzle removers
-    where sets = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
-          removers = concatMap (searchNakedPair puzzle) sets
+    where removers = concatMap (searchNakedPair puzzle) setSelectors
 
 searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Puzzle -> Puzzle]
 searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals, isNakedPair] unique_pairs
@@ -92,6 +94,16 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
           isNakedPair pair = hasTwo $ filter (==pair) $ map candidates pair_cells
           hasRemovals pair = any (\cell -> hasAnyCand pair cell && candidates cell /= pair) unsolved
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
+
+-- *Main> searchHiddenPair px ((==7) . rowOf)
+-- [(2,[65,67]),(8,[65,67])]
+
+searchHiddenPair puzzle p = twoPosCands
+    where unsolved = filterWith [p, isUnsolved] puzzle
+          unique_cands = unique $ concatMap candidates unsolved
+          indicesFor cand = map index $ filter (hasCand cand) unsolved
+          inTwoPlaces = (==2) . length . snd
+          twoPosCands = filter inTwoPlaces [(cand, indicesFor cand) | cand <- unique_cands]
 
 -- Double block omission.
 -- Hmm, looks like this is automatically handled with the above omissions so perhaps there's no need.
