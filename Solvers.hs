@@ -77,14 +77,14 @@ searchOmitCandidateInOneBlock puzzle p = removers
 
 -- Solving Naked pair
 -- If row, column, or block contains two pairs with exactly same candidates,
--- the numbers in elsewhere within the section can be removed.
+-- the numbers in elsewhere within the house can be removed.
 
-setSelectors :: [Cell -> Bool]
-setSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
+houseSelectors :: [Cell -> Bool]
+houseSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
 
 solveNakedPairs :: Puzzle -> Puzzle
 solveNakedPairs puzzle = foldl applyRemover puzzle removers
-    where removers = concatMap (searchNakedPair puzzle) setSelectors
+    where removers = concatMap (searchNakedPair puzzle) houseSelectors
 
 searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Puzzle -> Puzzle]
 searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals, isNakedPair] unique_pairs
@@ -100,10 +100,11 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
 
 solveHiddenPair :: Puzzle -> Puzzle
 solveHiddenPair puzzle = foldl applyRemover puzzle removers
-    where ps = concatMap (searchHiddenPair puzzle) setSelectors
+    where ps = concatMap (searchHiddenPair puzzle) houseSelectors
           removerFor p = applyWhen (\c -> index c `elem` fst p) (setCellCandidates $ snd p)
           removers = map removerFor ps
 
+searchHiddenPair :: Puzzle -> (Cell -> Bool) -> [([Index], [Candidate])]
 searchHiddenPair puzzle p = posCands
     where unsolved = filterWith [p, isUnsolved] puzzle
           unique_cands = unique $ concatMap candidates unsolved
@@ -112,6 +113,14 @@ searchHiddenPair puzzle p = posCands
           unique_positions = unique $ map fst twoPosCands
           candsForP p = map snd $ filter ((==p) . fst) twoPosCands
           posCands = [(p, candsForP p) | p <- unique_positions, hasTwo $ candsForP p]
+
+searchHiddenTriplet puzzle p
+    | length unsolved <= 3 = []
+    | otherwise = tripletPosCands
+    where unsolved = filterWith [p, isUnsolved] puzzle
+          unique_cands = unique $ concatMap candidates unsolved
+          positionsFor cand = map index $ filter (hasCand cand) unsolved
+          tripletPosCands = [(positionsFor cand, cand) | cand <- unique_cands, (<=3) $ length $ positionsFor cand]
 
 -- Double block omission.
 -- Hmm, looks like this is automatically handled with the above omissions so perhaps there's no need.
