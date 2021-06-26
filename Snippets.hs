@@ -43,6 +43,10 @@ filterWith :: [a -> Bool] -> [a] -> [a]
 filterWith = filter . allConds
     where allConds ps c = all (\ p -> p c) ps
 
+pairCombinations :: [a] -> [[a]]
+pairCombinations xs = [[a, b] | (a, i) <- xsi, (b, j) <- xsi, i < j]
+    where xsi = zip xs [0..]
+
 tripletCombinations :: [a] -> [[a]]
 tripletCombinations xs = [[a, b, c]
     | (a, i) <- items, 

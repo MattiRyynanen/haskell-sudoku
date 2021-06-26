@@ -148,26 +148,20 @@ searchHiddenTriplet puzzle p
           candidatesIn comb = unique $ map snd comb
           removerFor comb = applyWhen (\c -> p c && index c `elem` indicesFor comb) (keepOnlyCandidates (candidatesIn comb))
 
--- Double block omission.
--- Hmm, looks like this is automatically handled with the above omissions so perhaps there's no need.
--- On row or column of blocks:
--- for a candidate that is not solved in any of the blocks
--- if two of the blocks has candidate only on the same two rows (or, cols), the candidate
--- can be removed in the third block on those rows (columns).
+solveXwing :: Puzzle -> Puzzle
+solveXwing puzzle = foldl applyRemover puzzle removers
+    where removers = concat [searchXwing puzzle sel cand | cand  <- [1..9], sel <- ["rows", "cols"]]
 
-searchDoubleBlockOmission puzzle = byRow ++ byCol
-    where byRow = concat [searchDoubleBlockOmission2 puzzle b rowOf | b <- [[0,1,2], [3,4,5], [6,7,8]]]
-          byCol = concat [searchDoubleBlockOmission2 puzzle b colOf | b <- [[0,3,6], [1,4,7], [2,5,8]]]
-
-searchDoubleBlockOmission2 puzzle bis sel = pos
-    where cells = filter ((`elem` bis) . blockOf) puzzle
-          solved = unique $ concatMap candidates $ filter isSolved cells
-          unsolvedCands = filter (`notElem` solved) [1..9]
-          candPosInBlock cand bi = unique $ [sel c | c <- cells, hasCand cand c, blockOf c == bi]
-          candPos cand = map (candPosInBlock cand) bis
-          pos = [(cand, candPos cand) | cand <- unsolvedCands, hasDoubleBlockPair $ candPos cand]
-
-hasDoubleBlockPair xs = atLeastTwoPairs && twoSame
-    where pairs = filter ((==2) . length) xs
-          twoSame = length (unique pairs) < length pairs
-          atLeastTwoPairs = length pairs >= 2
+searchXwing :: Puzzle -> String -> Candidate -> [Puzzle -> Puzzle]
+searchXwing puzzle selId cand
+    | length unsolved <= 4 = []
+--    | otherwise = concatMap removalCells validCombs -- for testing
+    | otherwise = map removerFor (concatMap removalCells validCombs)
+    where unsolved = filterWith [hasCand cand, isUnsolved] puzzle
+          ops = if selId == "rows" then (rowOf, colOf) else (colOf, rowOf)
+          selector i = map (snd ops) $ filter ((==i) . fst ops) unsolved
+          twoPos f = [(i, f i) | i <- [0..8], hasTwo $ f i]
+          validComb comb = allSame $ map snd comb
+          validCombs = map (\comb -> (map fst comb, head $ map snd comb)) $ filter validComb (pairCombinations $ twoPos selector)
+          removalCells comb = filter (\c -> snd ops c `elem` snd comb && fst ops c `notElem` fst comb && hasCand cand c) unsolved
+          removerFor cell = applyWhen (samePosWith cell) (removeCellCandidate cand)

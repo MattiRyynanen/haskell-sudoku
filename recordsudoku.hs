@@ -6,7 +6,7 @@ import Snippets
 import Printers
 import Solvers
 
-pl = loadPuzzle SamplePuzzles.level5_hs_2020_07_25 --level5_hs_20200619
+pl = loadPuzzle SamplePuzzles.level5_hs2020_07_04 --level5_hs_20200619
 
 solutions :: [(Puzzle, String, Puzzle)]
 solutions = solve [(pl, "The loaded puzzle.", pl)]
@@ -27,6 +27,7 @@ solve puzzles
     | p /= hp = solve ((hp, "Hidden pairs.", p) : puzzles)
     | p /= nt = solve ((nt, "Naked triplets.", p) : puzzles)
     | p /= ht = solve ((ht, "Hidden triplets.", p) : puzzles)
+    | p /= xw = solve ((xw, "X-Wing.", p) : puzzles)
     | otherwise = (p, "No solution yet.", p) : puzzles -- no solution
     where (p, _, _) = head puzzles
           a = applyWhileReduced removeSolved p
@@ -37,3 +38,4 @@ solve puzzles
           hp = solveHiddenPair p
           nt = solveNakedTriplets p
           ht = solveHiddenTriplet p
+          xw = solveXwing p
