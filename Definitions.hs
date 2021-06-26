@@ -102,6 +102,6 @@ joint f cells
     where indx = map f cells
 
 loadPuzzle :: String -> Puzzle
-loadPuzzle = zipWith createCell [0..]
+loadPuzzle str = zipWith createCell [0..] (filter (`elem` "123456789.") str)
     where createCell i n = Cell {index = i, candidates = createCandidatesFrom n}
           createCandidatesFrom s = if s == '.' then [1..9] else [Data.Char.digitToInt s]
