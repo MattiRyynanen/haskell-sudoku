@@ -68,6 +68,9 @@ setCellCandidate cand cell = cell { candidates = [cand] }
 setCellCandidates :: [Candidate] -> Cell -> Cell
 setCellCandidates cands cell = cell { candidates = cands }
 
+keepOnlyCandidates :: [Candidate] -> Cell -> Cell
+keepOnlyCandidates cands cell = cell { candidates = filter (`elem` cands) (candidates cell) }
+
 hasCand :: Candidate -> Cell -> Bool
 hasCand cand cell = cand `elem` candidates cell
 

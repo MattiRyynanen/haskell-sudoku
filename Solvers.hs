@@ -118,8 +118,7 @@ solveNakedTriplets :: Puzzle -> Puzzle
 solveNakedTriplets puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchNakedTriplets puzzle) houseSelectors
 
-searchNakedTriplets
-  :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchNakedTriplets :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
 searchNakedTriplets puzzle p
     | length unsolved <= 3 = []
     | otherwise = map removerFor validCombs
@@ -131,13 +130,23 @@ searchNakedTriplets puzzle p
           indicesFor comb = map index comb
           removerFor comb = applyWhen (\c -> p c && index c `notElem` indicesFor comb) (removeCellCandidates (candidatesIn comb))
 
+solveHiddenTriplet puzzle = foldl applyRemover puzzle removers
+    where removers = concatMap (searchHiddenTriplet puzzle) houseSelectors
+
+searchHiddenTriplet :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
 searchHiddenTriplet puzzle p
     | length unsolved <= 3 = []
-    | otherwise = tripletPosCands
+    | otherwise = map removerFor validCombs
     where unsolved = filterWith [p, isUnsolved] puzzle
           unique_cands = unique $ concatMap candidates unsolved
           positionsFor cand = map index $ filter (hasCand cand) unsolved
           tripletPosCands = [(positionsFor cand, cand) | cand <- unique_cands, (<=3) $ length $ positionsFor cand]
+          combs = tripletCombinations tripletPosCands
+          combIndx comb = unique $ concatMap fst comb
+          validCombs = filter ((==3) . length . combIndx) combs
+          indicesFor comb = unique $ concatMap fst comb
+          candidatesIn comb = unique $ map snd comb
+          removerFor comb = applyWhen (\c -> p c && index c `elem` indicesFor comb) (keepOnlyCandidates (candidatesIn comb))
 
 -- Double block omission.
 -- Hmm, looks like this is automatically handled with the above omissions so perhaps there's no need.
