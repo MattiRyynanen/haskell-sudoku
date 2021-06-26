@@ -42,3 +42,12 @@ allSame xs = all (== head xs) $ tail xs
 filterWith :: [a -> Bool] -> [a] -> [a]
 filterWith = filter . allConds
     where allConds ps c = all (\ p -> p c) ps
+
+tripletCombinations :: [a] -> [[a]]
+tripletCombinations xs = [[a, b, c]
+    | (a, i) <- items, 
+    (b, j) <- items,
+    i < j,
+    (c, k) <- items,
+    j < k]
+    where items = zip xs [0..]
