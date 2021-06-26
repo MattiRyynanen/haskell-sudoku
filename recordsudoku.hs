@@ -6,7 +6,7 @@ import Snippets
 import Printers
 import Solvers
 
-pl = loadPuzzle SamplePuzzles.xtr_sud_73 --level5_hs_20200619
+pl = loadPuzzle SamplePuzzles.level5_hs_2020_10_4 --level5_hs_20200619
 
 solutions :: [(Puzzle, String, Puzzle)]
 solutions = solve [(pl, "The loaded puzzle.", pl)]
