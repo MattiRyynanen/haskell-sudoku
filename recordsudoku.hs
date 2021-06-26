@@ -25,6 +25,7 @@ solve puzzles
     | p /= oib = solve ((oib, "Omission: candidates within one block.", p) : puzzles )
     | p /= c = solve ((c, "Naked pairs.", p) : puzzles)
     | p /= hp = solve ((hp, "Hidden pairs.", p) : puzzles)
+    | p /= nt = solve ((nt, "Naked triplets.", p) : puzzles)
     | otherwise = (p, "No solution yet.", p) : puzzles -- no solution
     where (p, _, _) = head puzzles
           a = applyWhileReduced removeSolved p
@@ -33,3 +34,4 @@ solve puzzles
           bo = solveBlockOmissions p
           oib = solveOmitCandidateInOneBlock p
           hp = solveHiddenPair p
+          nt = solveNakedTriplets p

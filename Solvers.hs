@@ -114,6 +114,23 @@ searchHiddenPair puzzle p = posCands
           candsForP p = map snd $ filter ((==p) . fst) twoPosCands
           posCands = [(p, candsForP p) | p <- unique_positions, hasTwo $ candsForP p]
 
+solveNakedTriplets :: Puzzle -> Puzzle
+solveNakedTriplets puzzle = foldl applyRemover puzzle removers
+    where removers = concatMap (searchNakedTriplets puzzle) houseSelectors
+
+searchNakedTriplets
+  :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchNakedTriplets puzzle p
+    | length unsolved <= 3 = []
+    | otherwise = map removerFor validCombs
+    where unsolved = filterWith [p, isUnsolved] puzzle
+          combinations = tripletCombinations unsolved
+          hasThreeCandidates comb = (==3) $ length $ candidatesIn comb
+          candidatesIn comb = unique $ concatMap candidates comb
+          validCombs = filter hasThreeCandidates combinations
+          indicesFor comb = map index comb
+          removerFor comb = applyWhen (\c -> p c && index c `notElem` indicesFor comb) (removeCellCandidates (candidatesIn comb))
+
 searchHiddenTriplet puzzle p
     | length unsolved <= 3 = []
     | otherwise = tripletPosCands
