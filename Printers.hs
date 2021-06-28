@@ -19,8 +19,10 @@ showSolution minLevel step = concat [show solver, " Unsolved cells = ", unsolved
           unsolved = show $ length $ filter isUnsolved result
           puzzleStr = if (level solver) <= minLevel then "" else '\n' : (showPuzzleChange result previous) ++ "\n"
 
-showSolutions :: [SolutionStep] -> IO ()
-showSolutions xs = mapM_ (putStrLn . (showSolution 1)) (reverse xs)
+
+
+showSolutions :: [SolutionStep] -> String
+showSolutions xs = intercalate "\n" $ map (showSolution 1) (reverse xs)
 
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = concat ["\ESC[", show c, "m", str, "\ESC[0m"]
