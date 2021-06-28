@@ -1,10 +1,10 @@
-import qualified SamplePuzzles
 import Definitions
 import Printers
 import Solvers
 
 main = do
-    let pl = loadPuzzle SamplePuzzles.level5_hs2020_07_04
+    putStrLn "Welcome to a Sudoku solver. Please enter a sudoku:"
+    line <- getLine
+    let pl = loadPuzzle line
         solutions = solve [idleStep pl "The loaded puzzle."]
     putStrLn $ showSolutions solutions
-    --showSolutions solutions
