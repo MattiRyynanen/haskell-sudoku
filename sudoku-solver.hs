@@ -2,9 +2,15 @@ import Definitions
 import Printers
 import Solvers
 
-main = do
-    putStrLn "Welcome to a Sudoku solver. Please enter a sudoku:"
-    line <- getLine
-    let pl = loadPuzzle line
-        solutions = solve [idleStep pl "The loaded puzzle."]
-    putStrLn $ showSolutions solutions
+getSolution :: String -> String
+getSolution line
+    | null line = "-- empty line --"
+    | head line == '#' = line
+    | otherwise = showSolutions solutions
+    where pl = loadPuzzle line
+          solutions = solve [idleStep pl "The loaded puzzle."]
+
+eachLine :: (String -> String) -> (String -> String)
+eachLine f = unlines . map f . lines
+
+main = interact (eachLine getSolution)
