@@ -2,8 +2,12 @@ module Solvers where
 
 import Definitions
 import Snippets
-import Printers
 import Data.Maybe
+
+data Solver = Solver { transformer :: Puzzle -> Puzzle, name :: String, level :: Int }
+instance Show Solver where show s = concat [show $ level s, ": ", name s]
+
+data SolutionStep = SolutionStep { result :: Puzzle, previous :: Puzzle, solver :: Solver } deriving (Show)
 
 -- Remove candidates based on already solved cells.
 
@@ -22,7 +26,7 @@ solveOnlyPossibilityAt :: Puzzle -> Index -> Puzzle
 solveOnlyPossibilityAt puzzle ind
     | isSolved cell = puzzle
     | length onlies == 1 = setSolvedAt (head onlies) ind puzzle
-    | length onlies > 1 = error $ unwords ["Found more than one possible final candidate: ", tellCell cell, showPuzzle puzzle]
+    | length onlies > 1 = error $ unwords ["Found more than one possible final candidate: ", show cell]
     | otherwise = puzzle
     where onlies = searchOnlyPossibilityAt puzzle ind (candidates cell)
           cell = puzzle !! ind

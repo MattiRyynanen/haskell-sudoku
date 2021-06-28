@@ -5,7 +5,9 @@ import qualified Data.Char
 
 type Index = Int
 type Candidate = Int
-data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving (Show, Eq)
+data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving (Eq)
+instance Show Cell where show c = concat [show $ index c, ":", concatMap show $ candidates c]
+
 type Puzzle = [Cell]
 
 createEmptyPuzzle :: Puzzle

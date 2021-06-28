@@ -11,13 +11,16 @@ import Data.List (intercalate)
 import Data.Maybe
 import Definitions
 import Snippets
+import Solvers
 
-showSolution :: (Puzzle, String, Puzzle) -> String
-showSolution sol = concat [reason, " Unsolved cells = ", show $ length $ filter (not . isSolved) puzzle, "\n", showPuzzleChange puzzle prev, "\n"]
-    where (puzzle, reason, prev) = sol
+showSolution :: Int -> SolutionStep -> String
+showSolution minLevel step = concat [show solver, " Unsolved cells = ", unsolved, puzzleStr]
+    where SolutionStep result previous solver = step
+          unsolved = show $ length $ filter isUnsolved result
+          puzzleStr = if (level solver) <= minLevel then "" else '\n' : (showPuzzleChange result previous) ++ "\n"
 
-showSolutions :: [(Puzzle, String, Puzzle)] -> IO ()
-showSolutions xs = mapM_ (putStrLn . showSolution) (reverse xs)
+showSolutions :: [SolutionStep] -> IO ()
+showSolutions xs = mapM_ (putStrLn . (showSolution 1)) (reverse xs)
 
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = concat ["\ESC[", show c, "m", str, "\ESC[0m"]
