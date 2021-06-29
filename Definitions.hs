@@ -46,9 +46,6 @@ blockRowOf = (`div` 3) . blockOf
 blockColOf :: Cell -> Index
 blockColOf = (`rem` 3) . blockOf
 
-numCandidates :: Cell -> Int
-numCandidates = length . candidates
-
 uniqueCandidates :: [Cell] -> [Candidate]
 uniqueCandidates = unique . concatMap candidates
 
@@ -87,15 +84,6 @@ hasNoCand cand cell = cand `notElem` candidates cell
 
 hasAnyCand :: [Candidate] -> Cell -> Bool
 hasAnyCand cands cell = any (`hasCand` cell) cands
-
-countCandidates :: Candidate -> [Cell] -> Int
-countCandidates cand = length . filter (hasCand cand)
-
-removeCandidateAt :: Candidate -> Index -> Puzzle -> Puzzle
-removeCandidateAt cand ind = applyWhen ((==ind) . index) (removeCellCandidate cand)
-
-setSolvedAt :: Candidate -> Index -> Puzzle -> Puzzle
-setSolvedAt cand ind = applyWhen ((==ind) . index) (setCellCandidate cand)
 
  -- Could also use but seems slower: any (($b) . ($a) . sameBy) [rowOf, colOf, blockOf]
 intersects :: Cell -> Cell -> Bool

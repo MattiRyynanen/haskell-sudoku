@@ -60,10 +60,10 @@ solveSingles puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchSingles puzzle) houseSelectors
 
 searchSingles :: [Cell] -> (Cell -> Bool) -> [Puzzle -> Puzzle]
-searchSingles puzzle p = map removerFor $ filter isSingle unique_cands
+searchSingles puzzle p = map removerFor singles
     where unsolved = filterWith [p, isUnsolved] puzzle
-          unique_cands = unique $ concatMap candidates unsolved
-          isSingle cand = hasOne $ filter (hasCand cand) unsolved
+          singles = filter isSingle $ uniqueCandidates unsolved
+          isSingle cand = hasOne $ withCandidate cand unsolved
           removerFor cand = applyWhen (\c -> p c && hasCand cand c) (setCellCandidate cand)
 
 -- Block omission, candidates within one block on one row or column, only.
