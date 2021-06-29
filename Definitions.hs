@@ -5,13 +5,24 @@ import qualified Data.Char
 
 type Index = Int
 type Candidate = Int
-data Cell = Cell { index :: Index, candidates :: [Candidate] } deriving (Eq)
+
+data Cell = Cell {
+    index :: Index,
+    rowOf :: Index,
+    colOf :: Index,
+    blockOf :: Index,
+    candidates :: [Candidate]
+    } deriving (Eq)
+
 instance Show Cell where show c = concat [show $ index c, ":", concatMap show $ candidates c]
 
 type Puzzle = [Cell]
 
+createCell :: Index -> [Candidate] -> Cell
+createCell i cands = Cell { index = i, rowOf = rowAt i, colOf = colAt i, blockOf = blockAt i, candidates = cands }
+
 createEmptyPuzzle :: Puzzle
-createEmptyPuzzle = [Cell {index = i, candidates=[1..9]} | i <- [0..80]]
+createEmptyPuzzle = [createCell i [1..9] | i <- [0..80]]
 
 samePosWith :: Cell -> (Cell -> Bool)
 samePosWith = sameBy index
@@ -27,15 +38,6 @@ colAt = (`rem` 9)
 
 blockAt :: Index -> Index
 blockAt ind = 3 * (rowAt ind `div` 3) + colAt ind `div` 3
-
-rowOf :: Cell -> Index
-rowOf = rowAt . index
-
-colOf :: Cell -> Index
-colOf = colAt . index
-
-blockOf :: Cell -> Index
-blockOf = blockAt . index
 
 blockRowOf :: Cell -> Index
 blockRowOf = (`div` 3) . blockOf
@@ -91,8 +93,9 @@ removeCandidateAt cand ind = applyWhen ((==ind) . index) (removeCellCandidate ca
 setSolvedAt :: Candidate -> Index -> Puzzle -> Puzzle
 setSolvedAt cand ind = applyWhen ((==ind) . index) (setCellCandidate cand)
 
+ -- Could also use but seems slower: any (($b) . ($a) . sameBy) [rowOf, colOf, blockOf]
 intersects :: Cell -> Cell -> Bool
-intersects a b = any (($b) . ($a) . sameBy) [rowOf, colOf, blockOf]
+intersects a b = (rowOf a == rowOf b) || (colOf a == colOf b) || (blockOf a == blockOf b)
 
 intersectsEx :: Cell -> Cell -> Bool
 intersectsEx a b = index a /= index b && intersects a b
@@ -107,6 +110,6 @@ joint f cells
     where indx = map f cells
 
 loadPuzzle :: String -> Puzzle
-loadPuzzle str = zipWith createCell [0..] (filter (`elem` "123456789.") str)
-    where createCell i n = Cell {index = i, candidates = createCandidatesFrom n}
+loadPuzzle str = zipWith createCellWith [0..] (filter (`elem` "123456789.") str)
+    where createCellWith i n = createCell i (createCandidatesFrom n)
           createCandidatesFrom s = if s == '.' then [1..9] else [Data.Char.digitToInt s]
