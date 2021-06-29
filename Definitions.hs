@@ -11,7 +11,8 @@ data Cell = Cell {
     rowOf :: Index,
     colOf :: Index,
     blockOf :: Index,
-    candidates :: [Candidate]
+    candidates :: [Candidate],
+    broadcasted :: Bool -- if the final set value has been broadcasted to intersecting cells
     } deriving (Eq)
 
 instance Show Cell where show c = concat [show $ index c, ":", concatMap show $ candidates c]
@@ -19,7 +20,7 @@ instance Show Cell where show c = concat [show $ index c, ":", concatMap show $ 
 type Puzzle = [Cell]
 
 createCell :: Index -> [Candidate] -> Cell
-createCell i cands = Cell { index = i, rowOf = rowAt i, colOf = colAt i, blockOf = blockAt i, candidates = cands }
+createCell i cands = Cell { index = i, rowOf = rowAt i, colOf = colAt i, blockOf = blockAt i, candidates = cands, broadcasted = False }
 
 createEmptyPuzzle :: Puzzle
 createEmptyPuzzle = [createCell i [1..9] | i <- [0..80]]
@@ -74,6 +75,9 @@ setCellCandidates cands cell = cell { candidates = cands }
 
 keepOnlyCandidates :: [Candidate] -> Cell -> Cell
 keepOnlyCandidates cands cell = cell { candidates = filter (`elem` cands) (candidates cell) }
+
+setBroadcasted :: Cell -> Cell
+setBroadcasted cell = cell { broadcasted = True }
 
 hasCand :: Candidate -> Cell -> Bool
 hasCand cand cell = cand `elem` candidates cell

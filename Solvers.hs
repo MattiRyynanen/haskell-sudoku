@@ -42,10 +42,16 @@ solve steps
 -- Remove candidates based on already solved cells.
 
 removeSolved :: Puzzle -> Puzzle
-removeSolved puzzle = map removeCandidates puzzle
-    where solved = filter isSolved puzzle
-          candidatesToRemoveFor cell = concatMap candidates $ filter (intersectsEx cell) solved
-          removeCandidates cell = foldl (flip removeCellCandidate) cell (candidatesToRemoveFor cell)
+removeSolved puzzle = foldl broadcastSolved puzzle puzzle
+
+broadcastSolved :: Puzzle -> Cell -> Puzzle
+broadcastSolved puzzle cell
+    | broadcasted cell = puzzle -- already done
+    | isUnsolved cell = puzzle -- nothing to broadcast
+    | otherwise = applyWhen (samePosWith cell) setBroadcasted bs
+    where final = head $ candidates cell
+          isApplicable c = isUnsolved c && hasCand final c && intersects c cell
+          bs = applyWhen isApplicable (removeCellCandidate final) puzzle
 
 -- Only possibility solver:
 
