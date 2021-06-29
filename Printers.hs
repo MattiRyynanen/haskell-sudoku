@@ -17,7 +17,7 @@ showSolution :: Int -> SolutionStep -> String
 showSolution minLevel step = concat [show solver, " Unsolved cells = ", unsolved, puzzleStr]
     where SolutionStep result previous solver = step
           unsolved = show $ length $ filter isUnsolved result
-          puzzleStr = if (level solver) <= minLevel then "" else '\n' : (showPuzzleChange result previous) ++ "\n"
+          puzzleStr = if level solver <= minLevel then "" else '\n' : showPuzzleChange result previous ++ "\n"
 
 showSolutions :: [SolutionStep] -> String
 showSolutions xs = intercalate "\n" $ map (showSolution 1) (reverse xs)
@@ -53,9 +53,9 @@ combineColored cur prev = colored ++ "\ESC[0m"
 candStr :: Maybe Int -> Maybe Int -> String -> String
 candStr prev cur cand
     | cur == prev = cand
-    | isJust prev && isNothing cur = concat [end, cand]
-    | isNothing prev && isJust cur = concat [start cur, cand]
-    | otherwise = concat [end, start cur, cand]
+    | isJust prev && isNothing cur = end ++ cand
+    | isNothing prev && isJust cur = start cur ++ cand
+    | otherwise = end ++ start cur ++ cand
     where end = "\ESC[0m"
           start c = concat ["\ESC[", show $ fromJust c, "m"]
 
