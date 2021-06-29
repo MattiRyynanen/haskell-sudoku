@@ -16,7 +16,7 @@ applyWhileReduced f puzzle =
 
 solvers = let s = Solver in [
     s (applyWhileReduced removeSolved) "Removed candidates by solved values." 0,
-    s solveOnlyPossibility "Only possible candidate." 0,
+    s solveSingles "Singles, the only possibilities in any house." 0,
     s solveBlockOmissions "Omission: candidates in block on same row or column." 1,
     s solveOmitCandidateInOneBlock "Omission: candidates within one block." 1,
     s solveNakedPairs "Naked pairs." 2,
@@ -53,32 +53,18 @@ broadcastSolved puzzle cell
           isApplicable c = isUnsolved c && hasCand final c && intersects c cell
           bs = applyWhen isApplicable (removeCellCandidate final) puzzle
 
--- Only possibility solver:
+-- Singles, only possibility solver:
 
-solveOnlyPossibility :: Puzzle -> Puzzle
-solveOnlyPossibility puzzle = foldl solveOnlyPossibilityAt puzzle [0..80]
+solveSingles :: Puzzle -> Puzzle
+solveSingles puzzle = foldl applyRemover puzzle removers
+    where removers = concatMap (searchSingles puzzle) houseSelectors
 
-solveOnlyPossibilityAt :: Puzzle -> Index -> Puzzle
-solveOnlyPossibilityAt puzzle ind
-    | isSolved cell = puzzle
-    | length onlies == 1 = setSolvedAt (head onlies) ind puzzle
-    | length onlies > 1 = error $ unwords ["Found more than one possible final candidate: ", show cell]
-    | otherwise = puzzle
-    where onlies = searchOnlyPossibilityAt puzzle ind (candidates cell)
-          cell = puzzle !! ind
-
-searchOnlyPossibilityAt :: Puzzle -> Int -> [Candidate] -> [Candidate]
-searchOnlyPossibilityAt puzzle ind = filter (isOnlyPossibilityAt puzzle ind)
-
-isOnlyPossibilityAt :: Puzzle -> Int -> Candidate -> Bool
-isOnlyPossibilityAt puzzle ind cand
-    | hasNoCand cand (puzzle !! ind) = error "Candidate not in the cell."
-    | otherwise = any (onlyOneIn . get) [sameRow, sameCol, sameBlock]
-    where sameRow = (== rowAt ind) . rowOf
-          sameCol = (== colAt ind) . colOf
-          sameBlock = (== blockAt ind) . blockOf
-          get = flip filter puzzle
-          onlyOneIn = hasOne . filter (==cand) . concatMap candidates
+searchSingles :: [Cell] -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchSingles puzzle p = map removerFor $ filter isSingle unique_cands
+    where unsolved = filterWith [p, isUnsolved] puzzle
+          unique_cands = unique $ concatMap candidates unsolved
+          isSingle cand = hasOne $ filter (hasCand cand) unsolved
+          removerFor cand = applyWhen (\c -> p c && hasCand cand c) (setCellCandidate cand)
 
 -- Block omission, candidates within one block on one row or column, only.
 -- Can remove the possible candidates on that row or column on adjacent block.
