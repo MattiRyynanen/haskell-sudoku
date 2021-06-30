@@ -39,9 +39,8 @@ allSame :: Eq a => [a] -> Bool
 allSame [] = error "Can't check for empty list."
 allSame xs = all (== head xs) $ tail xs
 
-filterWith :: [a -> Bool] -> [a] -> [a]
-filterWith = filter . allConds
-    where allConds ps c = all (\ p -> p c) ps
+filterWith :: Foldable t => t (a -> Bool) -> [a] -> [a]
+filterWith fs xs = foldl (flip filter) xs fs
 
 pairCombinations :: [a] -> [[a]]
 pairCombinations xs = [[a, b] | (a, i) <- xsi, (b, j) <- xsi, i < j]
