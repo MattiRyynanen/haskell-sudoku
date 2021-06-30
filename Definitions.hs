@@ -15,7 +15,7 @@ data Cell = Cell {
     broadcasted :: Bool -- if the final set value has been broadcasted to intersecting cells
     } deriving (Eq)
 
-instance Show Cell where show c = concat [show $ index c, ":", concatMap show $ candidates c]
+instance Show Cell where show c = concat [show $ rowOf c, show $ colOf c, ":", concatMap show $ candidates c]
 
 type Puzzle = [Cell]
 

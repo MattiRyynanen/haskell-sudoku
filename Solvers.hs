@@ -174,6 +174,8 @@ searchHiddenTriplet puzzle p
           candidatesIn comb = unique $ map snd comb
           removerFor comb = applyWhen (\c -> p c && index c `elem` indicesFor comb) (keepOnlyCandidates (candidatesIn comb))
 
+-- X-Wing.
+
 solveXwing :: Puzzle -> Puzzle
 solveXwing puzzle = foldl applyRemover puzzle removers
     where removers = concat [searchXwing puzzle sel cand | cand  <- [1..9], sel <- ["rows", "cols"]]
@@ -191,3 +193,10 @@ searchXwing puzzle selId cand
           validCombs = map (\comb -> (map fst comb, head $ map snd comb)) $ filter validComb (pairCombinations $ twoPos selector)
           removalCells comb = filter (\c -> snd ops c `elem` snd comb && fst ops c `notElem` fst comb && hasCand cand c) unsolved
           removerFor cell = applyWhen (samePosWith cell) (removeCellCandidate cand)
+
+-- Unique rectangle.
+
+searchUniqueRect puzzle = filter validComb combs
+    where pairs = filter hasPair puzzle
+          combs = tripletCombinations pairs
+          validComb comb = allSame (map candidates comb) && (<3) (length $ unique $ map blockOf comb)

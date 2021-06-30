@@ -3,5 +3,6 @@ import Printers
 import Solvers
 import SamplePuzzles
 
-pl = loadPuzzle SamplePuzzles.level5_hs_2020_06_19
+pl = loadPuzzle SamplePuzzles.level5_hs_2020_07_11
 solutions = solve [idleStep pl "The loaded puzzle."]
+px = result $ head solutions
