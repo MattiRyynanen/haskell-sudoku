@@ -199,4 +199,12 @@ searchXwing puzzle selId cand
 searchUniqueRect puzzle = filter validComb combs
     where pairs = filter hasPair puzzle
           combs = tripletCombinations pairs
-          validComb comb = allSame (map candidates comb) && (<3) (length $ unique $ map blockOf comb)
+          validComb comb = allSame (map candidates comb) && (<3) (length $ unique $ map blockOf comb) 
+
+singleFromTriplet :: Eq p => [p] -> p
+singleFromTriplet [a, b, c]
+    | a == b = c
+    | a == c = b
+    | b == c = a
+    | otherwise = error "All the elements are unique!"
+singleFromTriplet _ = error "Works only for lists of length 3."
