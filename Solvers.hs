@@ -23,7 +23,8 @@ solvers = let s = Solver in [
     s solveHiddenPair "Hidden pairs." 2,
     s solveNakedTriplets "Naked triplets." 3,
     s solveHiddenTriplet "Hidden triplets." 4,
-    s solveXwing "X-Wing." 5]
+    s solveXwing "X-Wing." 5,
+    s solveUniqueRectangle "Unique rectangle." 5]
 
 idSolver n = Solver id n 100
 idleStep puzzle id = SolutionStep puzzle puzzle (idSolver id)
@@ -196,15 +197,25 @@ searchXwing puzzle selId cand
 
 -- Unique rectangle.
 
-searchUniqueRect puzzle = filter validComb combs
+solveUniqueRectangle puzzle = foldl applyRemover puzzle removers
+    where removers = searchUniqueRect puzzle
+
+searchUniqueRect puzzle = map removerFor $ filter validComb combs
     where pairs = filter hasPair puzzle
           combs = tripletCombinations pairs
-          validComb comb = allSame (map candidates comb) && (<3) (length $ unique $ map blockOf comb) 
+          ops = [rowOf, colOf]
+          maxTwoBlock = (<3) . length . unique . map blockOf
+          get f = singleFromTriplet . map f
+          rectanglePos comb = all (isJust . ($comb) . get) ops
+          validComb comb = rectanglePos comb &&allSame (map candidates comb) && maxTwoBlock comb
+          removerFor comb = applyWhen ((== pos comb) . cellPos) (removeCellCandidates (candidates $ head comb))
+              where pos comb = map (fromJust . ($comb) . get) ops
+                    cellPos cell = map ($cell) ops
 
-singleFromTriplet :: Eq p => [p] -> p
+singleFromTriplet :: Eq p => [p] -> Maybe p
 singleFromTriplet [a, b, c]
-    | a == b = c
-    | a == c = b
-    | b == c = a
-    | otherwise = error "All the elements are unique!"
+    | a == b = Just c
+    | a == c = Just b
+    | b == c = Just a
+    | otherwise = Nothing -- "All the elements are unique"
 singleFromTriplet _ = error "Works only for lists of length 3."
