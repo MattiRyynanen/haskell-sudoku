@@ -24,7 +24,8 @@ solvers = let s = Solver in [
     s solveNakedTriplets "Naked triplets." 3,
     s solveHiddenTriplet "Hidden triplets." 4,
     s solveXwing "X-Wing." 5,
-    s solveUniqueRectangle "Unique rectangle." 5]
+    s solveUniqueRectangle "Unique rectangle." 5,
+    s solveXyWing "XY-Wing." 6]
 
 idSolver n = Solver id n 100
 idleStep puzzle id = SolutionStep puzzle puzzle (idSolver id)
@@ -219,3 +220,44 @@ singleFromTriplet [a, b, c]
     | b == c = Just a
     | otherwise = Nothing -- "All the elements are unique"
 singleFromTriplet _ = error "Works only for lists of length 3."
+
+-- XY wing
+-- On any three unique cells (x, y1, y2)
+-- x, y1, y2 have only pair candidates
+-- x intersects with both y1 and y2
+-- y1 does not intersect y2
+-- one of candidates in x is in y1 and the other in y2
+-- the candidates in y1 and y2 not shared in x are the same
+
+solveXyWing :: Puzzle -> Puzzle
+solveXyWing puzzle = foldl applyRemover puzzle removers
+    where removers = map removerFor $ searchXyWing puzzle
+          removerFor comb = applyWhen (xyRemovalPos comb) (removeCellCandidate $ xyRemovalCand comb)
+
+xyRemovalPos :: [Cell] -> Cell -> Bool
+xyRemovalPos comb cell = all (intersectsEx cell) (drop 1 comb)
+
+xyRemovalCand :: [Cell] -> Candidate
+xyRemovalCand [x, y1, _] = head $ filter (`notElem` candidates x) (candidates y1)
+
+searchXyWing :: Puzzle -> [[Cell]]
+searchXyWing puzzle = xyCombinations pairs
+    where pairs = filter hasPair puzzle
+
+xyPosOk :: Cell -> Cell -> Cell -> Bool
+xyPosOk x y1 y2 = intersectsEx x y1 && intersectsEx x y2 && not (intersectsEx y1 y2)
+
+xyCandsOk :: Cell -> Cell -> Cell -> Bool
+xyCandsOk x y1 y2 = all threeUnique [[x, y1], [x, y2], [y1, y2], [x, y1, y2]]
+    where threeUnique xs = (==3) $ length $ unique $ concatMap candidates xs
+
+xyCombinations :: [Cell] -> [[Cell]]
+xyCombinations xs = [[x, y1, y2] 
+    | x <- xs
+    , (y1, i) <- xsi
+    , (y2, j) <- xsi
+    , i < j
+    , xyPosOk x y1 y2
+    , xyCandsOk x y1 y2
+    ]
+    where xsi = zip xs [0..]
