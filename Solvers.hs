@@ -5,7 +5,9 @@ import Snippets
 import Data.Maybe
 import Data.List (find)
 
-data Solver = Solver { transformer :: Puzzle -> Puzzle, name :: String, level :: Int }
+type Transformer = Puzzle -> Puzzle
+
+data Solver = Solver { transformer :: Transformer, name :: String, level :: Int }
 instance Show Solver where show s = concat [show $ level s, ": ", name s]
 
 data SolutionStep = SolutionStep { result :: Puzzle, previous :: Puzzle, solver :: Solver } deriving (Show)
@@ -30,9 +32,20 @@ solvers = let s = Solver in [
 idSolver n = Solver id n 100
 idleStep puzzle id = SolutionStep puzzle puzzle (idSolver id)
 
+hasContradiction :: Puzzle -> Bool
+hasContradiction puzzle = not $ all isValid houseSelectors
+    where solved = filter isSolved puzzle
+          isValid house = let b = filter house solved in (length b == uniqueCands b)
+          uniqueCands = length . unique . map candidates
+
+hasZeroCandidates :: Puzzle -> Bool
+hasZeroCandidates = any (null . candidates)
+
 solve :: [SolutionStep] -> [SolutionStep]
 solve steps
     | null steps = error "Nothing to solve."
+    | hasContradiction latest = prepend $ idleStep latest "There's a contradiction!!! Invalid puzzle?"
+    | hasZeroCandidates latest = prepend $ idleStep latest "Some cell has zero candidates!!! Invalid puzzle?"
     | all isSolved latest = prepend $ idleStep latest "Solved!"
     | isJust simplestSolver = solve $ prepend $ stepFor simplestSolver
     | otherwise = prepend $ idleStep latest "No solution yet."
@@ -43,7 +56,7 @@ solve steps
 
 -- Remove candidates based on already solved cells.
 
-removeSolved :: Puzzle -> Puzzle
+removeSolved :: Transformer
 removeSolved puzzle = foldl broadcastSolved puzzle puzzle
 
 broadcastSolved :: Puzzle -> Cell -> Puzzle
@@ -57,11 +70,11 @@ broadcastSolved puzzle cell
 
 -- Singles, only possibility solver:
 
-solveSingles :: Puzzle -> Puzzle
+solveSingles :: Transformer
 solveSingles puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchSingles puzzle) houseSelectors
 
-searchSingles :: [Cell] -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchSingles :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchSingles puzzle p = map removerFor singles
     where unsolved = filterWith [p, isUnsolved] puzzle
           singles = filter isSingle $ uniqueCandidates unsolved
@@ -71,15 +84,15 @@ searchSingles puzzle p = map removerFor singles
 -- Block omission, candidates within one block on one row or column, only.
 -- Can remove the possible candidates on that row or column on adjacent block.
 
-applyRemover :: Puzzle -> (Puzzle -> Puzzle) -> Puzzle
+applyRemover :: Puzzle -> Transformer -> Puzzle
 applyRemover puzzle remover = remover puzzle
 
-solveBlockOmissions :: Puzzle -> Puzzle
+solveBlockOmissions :: Transformer
 solveBlockOmissions puzzle = foldl applyRemover puzzle (rowRemovers ++ colRemovers)
     where rowRemovers = concatMap (searchBlockOmissionBy rowOf puzzle) [0..8]
           colRemovers = concatMap (searchBlockOmissionBy colOf puzzle) [0..8]
 
-searchBlockOmissionBy :: (Cell -> Index) -> Puzzle -> Index -> [Puzzle -> Puzzle]
+searchBlockOmissionBy :: (Cell -> Index) -> Puzzle -> Index -> [Transformer]
 searchBlockOmissionBy indexer puzzle blockIndex = removers
     where unsolved = filterWith [(==blockIndex) . blockOf, isUnsolved] puzzle
           candidates = uniqueCandidates unsolved
@@ -90,12 +103,12 @@ searchBlockOmissionBy indexer puzzle blockIndex = removers
 -- Block omission: row or column has a candidate only within one block, any other
 -- candidate in that block can be removed.
 
-solveOmitCandidateInOneBlock :: Puzzle -> Puzzle
+solveOmitCandidateInOneBlock :: Transformer
 solveOmitCandidateInOneBlock puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchOmitCandidateInOneBlock puzzle) (concatMap selectors [rowOf, colOf])
           selectors f = map (\i -> (==i) . f) [0..8]
 
-searchOmitCandidateInOneBlock :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchOmitCandidateInOneBlock :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchOmitCandidateInOneBlock puzzle p = removers
     where unsolved = filterWith [p, isUnsolved] puzzle
           candidates = uniqueCandidates unsolved
@@ -110,11 +123,11 @@ searchOmitCandidateInOneBlock puzzle p = removers
 houseSelectors :: [Cell -> Bool]
 houseSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
 
-solveNakedPairs :: Puzzle -> Puzzle
+solveNakedPairs :: Transformer
 solveNakedPairs puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchNakedPair puzzle) houseSelectors
 
-searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Transformer]
 searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals, isNakedPair] unique_pairs
     where unsolved = filterWith [p, isUnsolved] puzzle
           pair_cells = filter hasPair unsolved
@@ -126,7 +139,7 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
 -- *Main> searchHiddenPair px ((==7) . rowOf)
 -- [(2,[65,67]),(8,[65,67])]
 
-solveHiddenPair :: Puzzle -> Puzzle
+solveHiddenPair :: Transformer
 solveHiddenPair puzzle = foldl applyRemover puzzle removers
     where ps = concatMap (searchHiddenPair puzzle) houseSelectors
           removerFor p = applyWhen (\c -> index c `elem` fst p) (setCellCandidates $ snd p)
@@ -142,11 +155,11 @@ searchHiddenPair puzzle p = posCands
           candsForP p = map snd $ filter ((==p) . fst) twoPosCands
           posCands = [(p, candsForP p) | p <- unique_positions, hasTwo $ candsForP p]
 
-solveNakedTriplets :: Puzzle -> Puzzle
+solveNakedTriplets :: Transformer
 solveNakedTriplets puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchNakedTriplets puzzle) houseSelectors
 
-searchNakedTriplets :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchNakedTriplets :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchNakedTriplets puzzle p
     | length unsolved <= 3 = []
     | otherwise = map removerFor validCombs
@@ -161,7 +174,7 @@ searchNakedTriplets puzzle p
 solveHiddenTriplet puzzle = foldl applyRemover puzzle removers
     where removers = concatMap (searchHiddenTriplet puzzle) houseSelectors
 
-searchHiddenTriplet :: Puzzle -> (Cell -> Bool) -> [Puzzle -> Puzzle]
+searchHiddenTriplet :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchHiddenTriplet puzzle p
     | length unsolved <= 3 = []
     | otherwise = map removerFor validCombs
@@ -178,11 +191,11 @@ searchHiddenTriplet puzzle p
 
 -- X-Wing.
 
-solveXwing :: Puzzle -> Puzzle
+solveXwing :: Transformer
 solveXwing puzzle = foldl applyRemover puzzle removers
-    where removers = concat [searchXwing puzzle sel cand | cand  <- [1..9], sel <- ["rows", "cols"]]
+    where removers = concat [searchXwing puzzle sel cand | cand <- [1..9], sel <- ["rows", "cols"]]
 
-searchXwing :: Puzzle -> String -> Candidate -> [Puzzle -> Puzzle]
+searchXwing :: Puzzle -> String -> Candidate -> [Transformer]
 searchXwing puzzle selId cand
     | length unsolved <= 4 = []
 --    | otherwise = concatMap removalCells validCombs -- for testing
@@ -195,6 +208,21 @@ searchXwing puzzle selId cand
           validCombs = map (\comb -> (map fst comb, head $ map snd comb)) $ filter validComb (pairCombinations $ twoPos selector)
           removalCells comb = filter (\c -> snd ops c `elem` snd comb && fst ops c `notElem` fst comb && hasCand cand c) unsolved
           removerFor cell = applyWhen (samePosWith cell) (removeCellCandidate cand)
+
+
+-- Swordfish (X-Wing on three columns or rows)
+
+data RowCol = Row | Col deriving (Eq)
+
+--searchSwordfish :: Puzzle -> RowCol -> Candidate -> [Transformer]
+searchSwordfish puzzle rowCol cand = selections
+    where unsolved = filterWith [hasCand cand, isUnsolved] puzzle
+          (op1, op2) = if rowCol == Row then (rowOf, colOf) else (colOf, rowOf)
+          selector i = filter ((==i) . op1)
+          selectors = map selector [0..8]
+          selections = filter (($[2, 3]) . elem . length) $ map ($unsolved) selectors
+          validComb comb = (==3) $ length $ unique $ map op2 $ concat comb
+          validCombs = filter validComb $ tripletCombinations selections
 
 -- Unique rectangle.
 
@@ -229,7 +257,7 @@ singleFromTriplet _ = error "Works only for lists of length 3."
 -- one of candidates in x is in y1 and the other in y2
 -- the candidates in y1 and y2 not shared in x are the same
 
-solveXyWing :: Puzzle -> Puzzle
+solveXyWing :: Transformer
 solveXyWing puzzle = foldl applyRemover puzzle removers
     where removers = map removerFor $ searchXyWing puzzle
           removerFor comb = applyWhen (xyRemovalPos comb) (removeCellCandidate $ xyRemovalCand comb)
