@@ -14,10 +14,11 @@ import Snippets
 import Solvers
 
 showSolution :: Int -> SolutionStep -> String
-showSolution minLevel step = concat [show solver, " Unsolved cells = ", unsolved, puzzleStr]
-    where SolutionStep result previous solver = step
-          unsolved = show $ length $ filter isUnsolved result
+showSolution minLevel (SolverStep result previous solver) = concat [show solver, " Unsolved cells = ", unsolved, puzzleStr]
+    where unsolved = show $ length $ filter isUnsolved result
           puzzleStr = if level solver <= minLevel then "" else '\n' : showPuzzleChange result previous ++ "\n"
+
+showSolution _ (IdleStep puz id) = concat ["Step: ", show id, "\n", showPuzzle puz]
 
 showSolutions :: [SolutionStep] -> String
 showSolutions xs = intercalate "\n" $ map (showSolution 1) (reverse xs)

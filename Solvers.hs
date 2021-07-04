@@ -10,7 +10,15 @@ type Transformer = Puzzle -> Puzzle
 data Solver = Solver { transformer :: Transformer, name :: String, level :: Int }
 instance Show Solver where show s = concat [show $ level s, ": ", name s]
 
-data SolutionStep = SolutionStep { result :: Puzzle, previous :: Puzzle, solver :: Solver } deriving (Show)
+data IdleStepId = Initial | Solved | NoSolution | InvalidSolution deriving (Eq, Show)
+
+data SolutionStep =
+    IdleStep { puzzle :: Puzzle, step :: IdleStepId } | 
+    SolverStep { result :: Puzzle, previous :: Puzzle, solver :: Solver } deriving (Show)
+
+getPuzzle :: SolutionStep -> Puzzle
+getPuzzle IdleStep {puzzle = p}  = p
+getPuzzle SolverStep {result = p} = p
 
 applyWhileReduced f puzzle =
     let reduced = f puzzle
@@ -29,21 +37,22 @@ solvers = let s = Solver in [
     s solveUniqueRectangle "Unique rectangle." 5,
     s solveXyWing "XY-Wing." 6]
 
-idSolver n = Solver id n 100
-idleStep puzzle id = SolutionStep puzzle puzzle (idSolver id)
+--idSolver n = Solver id n 100
+--idleStep puzzle id = SolutionStep puzzle puzzle (idSolver id)
 
 solve :: [SolutionStep] -> [SolutionStep]
 solve steps
     | null steps = error "Nothing to solve."
-    | not $ housesOk latest = prepend $ idleStep latest "There's a contradiction!!! Invalid puzzle?"
-    | hasZeroCandidates latest = prepend $ idleStep latest "Some cell has zero candidates!!! Invalid puzzle?"
-    | all isSolved latest = prepend $ idleStep latest "Solved!"
+    | not $ housesOk latest = addIdleStep InvalidSolution
+    | hasZeroCandidates latest = addIdleStep InvalidSolution
+    | all isSolved latest = addIdleStep Solved
     | isJust simplestSolver = solve $ prepend $ stepFor simplestSolver
-    | otherwise = prepend $ idleStep latest "No solution yet."
-    where latest = result $ head steps -- the latest puzzle
+    | otherwise = addIdleStep NoSolution
+    where latest = getPuzzle $ head steps -- the latest puzzle
           simplestSolver = find (\solver -> transformer solver latest /= latest) solvers
           prepend step = step : steps
-          stepFor solver = let s = fromJust solver in SolutionStep (transformer s latest) latest s
+          stepFor solver = let s = fromJust solver in SolverStep (transformer s latest) latest s
+          addIdleStep stepId = prepend $ IdleStep latest stepId
 
 -- Remove candidates based on already solved cells.
 

@@ -11,7 +11,7 @@ getSolution line
     | isNothing pl = "Invalid puzzle."
     | otherwise = showSolutions solutions
     where pl = loadPuzzle line
-          solutions = solve [idleStep (fromJust pl) "The loaded puzzle."]
+          solutions = solve [IdleStep (fromJust pl) Initial]
 
 eachLine :: (String -> String) -> (String -> String)
 eachLine f = unlines . map f . lines
