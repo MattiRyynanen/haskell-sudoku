@@ -46,6 +46,9 @@ blockRowOf = (`div` 3) . blockOf
 blockColOf :: Cell -> Index
 blockColOf = (`rem` 3) . blockOf
 
+houseSelectors :: [Cell -> Bool]
+houseSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
+
 uniqueCandidates :: [Cell] -> [Candidate]
 uniqueCandidates = unique . concatMap candidates
 
@@ -101,7 +104,19 @@ joint f cells
     | otherwise = Nothing
     where indx = map f cells
 
-loadPuzzle :: String -> Puzzle
-loadPuzzle str = zipWith createCellWith [0..] (filter (`elem` "123456789.") str)
+housesOk :: Puzzle -> Bool
+housesOk puzzle = all isValid houseSelectors
+    where solved = filter isSolved puzzle
+          isValid house = let b = filter house solved in (length b == uniqueCands b)
+          uniqueCands = length . unique . map candidates
+
+hasZeroCandidates :: Puzzle -> Bool
+hasZeroCandidates = any (null . candidates)
+
+loadPuzzle :: String -> Maybe Puzzle
+loadPuzzle str
+    | length puzzle == 81 && housesOk puzzle = Just puzzle
+    | otherwise = Nothing
     where createCellWith i n = createCell i (createCandidatesFrom n)
           createCandidatesFrom s = if s == '.' then [1..9] else [Data.Char.digitToInt s]
+          puzzle = zipWith createCellWith [0..] (filter (`elem` "123456789.") str)

@@ -32,19 +32,10 @@ solvers = let s = Solver in [
 idSolver n = Solver id n 100
 idleStep puzzle id = SolutionStep puzzle puzzle (idSolver id)
 
-hasContradiction :: Puzzle -> Bool
-hasContradiction puzzle = not $ all isValid houseSelectors
-    where solved = filter isSolved puzzle
-          isValid house = let b = filter house solved in (length b == uniqueCands b)
-          uniqueCands = length . unique . map candidates
-
-hasZeroCandidates :: Puzzle -> Bool
-hasZeroCandidates = any (null . candidates)
-
 solve :: [SolutionStep] -> [SolutionStep]
 solve steps
     | null steps = error "Nothing to solve."
-    | hasContradiction latest = prepend $ idleStep latest "There's a contradiction!!! Invalid puzzle?"
+    | not $ housesOk latest = prepend $ idleStep latest "There's a contradiction!!! Invalid puzzle?"
     | hasZeroCandidates latest = prepend $ idleStep latest "Some cell has zero candidates!!! Invalid puzzle?"
     | all isSolved latest = prepend $ idleStep latest "Solved!"
     | isJust simplestSolver = solve $ prepend $ stepFor simplestSolver
@@ -119,9 +110,6 @@ searchOmitCandidateInOneBlock puzzle p = removers
 -- Solving Naked pair
 -- If row, column, or block contains two pairs with exactly same candidates,
 -- the numbers in elsewhere within the house can be removed.
-
-houseSelectors :: [Cell -> Bool]
-houseSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
 
 solveNakedPairs :: Transformer
 solveNakedPairs puzzle = foldl applyRemover puzzle removers
