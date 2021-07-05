@@ -3,7 +3,8 @@ module Printers
     printPuzzle,
     showPuzzle,
     tellCell,
-    showSolutions
+    showSolutions,
+    showPuzzleNoCands
 )
 where 
 
@@ -18,13 +19,25 @@ showSolution minLevel (SolverStep result previous solver) = concat [show solver,
     where unsolved = show $ length $ filter isUnsolved result
           puzzleStr = if level solver <= minLevel then "" else '\n' : showPuzzleChange result previous ++ "\n"
 
-showSolution _ (IdleStep puz id) = concat ["Step: ", show id, "\n", showPuzzle puz]
+showSolution _ (IdleStep puz id) = concat ["Step: ", show id, "\n", colorPz]
+    where pz = showPuzzleNoCands puz
+          colorPz = case id of Solved -> withColor 32 pz
+                               NoSolution -> showPuzzle puz
+                               _ -> pz
 
 showSolutions :: [SolutionStep] -> String
 showSolutions xs = intercalate "\n" $ map (showSolution 1) (reverse xs)
 
 withColor :: Show a => a -> [Char] -> [Char]
 withColor c str = concat ["\ESC[", show c, "m", str, "\ESC[0m"]
+
+showPuzzleNoCands :: Puzzle -> String
+showPuzzleNoCands p = intercalate line (map concat (group 3 rows))
+    where rows = map (('\n':) . intercalate "|") $ group 3 $ map concat $ group 3 cells
+          cells = map cellContent p
+          cellNumber c = if isSolved c then show $ head $ candidates c else "."
+          cellContent c = concat [" ", cellNumber c, " "]
+          line = '\n' : intercalate "+" (replicate 3 (replicate 9 '-'))
 
 showPuzzle :: Puzzle -> String
 showPuzzle cells = showPuzzleChange cells cells
