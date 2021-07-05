@@ -5,8 +5,13 @@ import Definitions
 import Printers
 import Solvers
 
-dispatch :: [(String, [String] -> IO ())]
-dispatch = [("session", session), ("help", help)]
+type Program = [String] -> IO ()
+
+dispatch :: [(String, Program)]
+dispatch = [ ("session", session)
+           , ("help", help)
+           , ("stats", stats)
+           ]
 
 main = do
     cargs <- getArgs
@@ -15,6 +20,18 @@ main = do
         else do
             let (Just action) = lookup (head cargs) dispatch
             action (tail cargs)
+
+help :: Program
+help _ = do
+    putStrLn "Please provide program: help, session"
+
+session :: Program
+session _ = do
+    putStrLn "Sudoku solver. Input a sudoku with a line and press enter."
+    putStrLn "Example:"
+    putStrLn ".8....3.1 .143..... ..5.7...9 5..6..1.. 42..5..87 ..8..7..5 2...8.5.. .....674. 8.6....1."
+    interact (eachLine getSolution)
+    putStrLn "Solver session finished."
 
 getSolution :: String -> String
 getSolution line
@@ -28,17 +45,14 @@ getSolution line
 eachLine :: (String -> String) -> (String -> String)
 eachLine f = unlines . map f . lines
 
-session :: [String] -> IO ()
-session _ = do
-    putStrLn "Sudoku solver. Input a sudoku with a line and press enter."
-    putStrLn "Example:"
-    putStrLn ".8....3.1 .143..... ..5.7...9 5..6..1.. 42..5..87 ..8..7..5 2...8.5.. .....674. 8.6....1."
-    interact (eachLine getSolution)
-    putStrLn "Solver session finished."
+stats :: Program
+stats _ = do
+    contents <- getContents
+    putStrLn (solveAllFrom contents)
 
-help :: [String] -> IO ()
-help _ = do
-    putStrLn "A help text here."
+solveAllFrom input = result
+    where puzzles = mapMaybe loadPuzzle (lines input)
+          result = concat ["Found ", show $ length puzzles, " puzzles."]
 
 -- Building profile
 -- stack ghc -- -prof -fprof-auto -rtsopts sudoku-solver.hs
