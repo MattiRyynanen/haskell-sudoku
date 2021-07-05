@@ -20,6 +20,10 @@ getPuzzle :: SolutionStep -> Puzzle
 getPuzzle IdleStep {puzzle = p}  = p
 getPuzzle SolverStep {result = p} = p
 
+getStepId :: SolutionStep -> Maybe IdleStepId
+getStepId (IdleStep _ id) = Just id
+getStepId SolverStep {} = Nothing
+
 applyWhileReduced f puzzle =
     let reduced = f puzzle
     in if reduced == puzzle then puzzle else applyWhileReduced f reduced
@@ -36,9 +40,6 @@ solvers = let s = Solver in [
     s solveXwing "X-Wing." 5,
     s solveUniqueRectangle "Unique rectangle." 5,
     s solveXyWing "XY-Wing." 6]
-
---idSolver n = Solver id n 100
---idleStep puzzle id = SolutionStep puzzle puzzle (idSolver id)
 
 solve :: [SolutionStep] -> [SolutionStep]
 solve steps
