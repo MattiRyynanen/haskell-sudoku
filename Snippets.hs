@@ -1,6 +1,7 @@
 module Snippets where
 
 import qualified Data.Set
+import Data.List (nub)
 
 applyWhen :: (b -> Bool) -> (b -> b) -> [b] -> [b]
 applyWhen pred func = map (applyIf pred func)
@@ -54,3 +55,8 @@ tripletCombinations xs = [[a, b, c]
     (c, k) <- items,
     j < k]
     where items = zip xs [0..]
+
+countOccurences :: Eq a => [a] -> [(a, Int)]
+countOccurences xs = [(e, count e) | e <- elems]
+    where elems = nub xs
+          count e = length $ filter (==e) xs

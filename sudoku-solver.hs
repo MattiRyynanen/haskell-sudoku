@@ -4,6 +4,7 @@ import System.Environment
 import Definitions
 import Printers
 import Solvers
+import Snippets
 
 type Program = [String] -> IO ()
 
@@ -40,7 +41,7 @@ getSolution line
     | isNothing pl = "Invalid puzzle."
     | otherwise = showSolutions solutions
     where pl = loadPuzzle line
-          solutions = solve [IdleStep (fromJust pl) Initial]
+          solutions = beginSolve (fromJust pl)
 
 eachLine :: (String -> String) -> (String -> String)
 eachLine f = unlines . map f . lines
@@ -48,11 +49,12 @@ eachLine f = unlines . map f . lines
 stats :: Program
 stats _ = do
     contents <- getContents
-    putStrLn (solveAllFrom contents)
+    let results = map finalResult (loadPuzzlesFrom contents)
+        occurences = countOccurences results
+    print occurences
 
-solveAllFrom input = result
-    where puzzles = mapMaybe loadPuzzle (lines input)
-          result = concat ["Found ", show $ length puzzles, " puzzles."]
+loadPuzzlesFrom :: String -> [Puzzle]
+loadPuzzlesFrom input = mapMaybe loadPuzzle (lines input)
 
 -- Building profile
 -- stack ghc -- -prof -fprof-auto -rtsopts sudoku-solver.hs

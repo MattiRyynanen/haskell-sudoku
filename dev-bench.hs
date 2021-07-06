@@ -5,5 +5,5 @@ import SamplePuzzles
 import Data.Maybe
 
 pl = loadPuzzle SamplePuzzles.level5_hs_2020_07_05
-solutions = solve [IdleStep (fromJust pl) Initial]
+solutions = beginSolve (fromJust pl)
 px = getPuzzle $ head solutions

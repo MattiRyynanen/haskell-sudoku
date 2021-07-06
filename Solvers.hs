@@ -7,8 +7,16 @@ import Data.List (find)
 
 type Transformer = Puzzle -> Puzzle
 
-data Solver = Solver { transformer :: Transformer, name :: String, level :: Int }
-instance Show Solver where show s = concat [show $ level s, ": ", name s]
+data SolverId = RemoveBySolved | Singles
+    | BlockOmission | OmitCandidateInOneBlock
+    | NakedPair | HiddenPair
+    | NakedTriplet | HiddenTriplet
+    | XWing | XYWing
+    | UniqueRectangle
+    | PairContradiction deriving (Eq, Show)
+
+data Solver = Solver { transformer :: Transformer, identifier :: SolverId, level :: Int }
+instance Show Solver where show s = concat [show $ level s, ": ", show $ identifier s]
 
 data IdleStepId = Initial | Solved | NoSolution | InvalidSolution deriving (Eq, Show)
 
@@ -28,19 +36,29 @@ applyWhileReduced f puzzle =
     let reduced = f puzzle
     in if reduced == puzzle then puzzle else applyWhileReduced f reduced
 
+solvers :: [Solver]
 solvers = let s = Solver in [
-    s (applyWhileReduced removeSolved) "Removed candidates by solved values." 0,
-    s solveSingles "Singles, the only possibilities in any house." 0,
-    s solveBlockOmissions "Omission: candidates in block on same row or column." 1,
-    s solveOmitCandidateInOneBlock "Omission: candidates within one block." 1,
-    s solveNakedPairs "Naked pairs." 2,
-    s solveHiddenPair "Hidden pairs." 2,
-    s solveNakedTriplets "Naked triplets." 3,
-    s solveHiddenTriplet "Hidden triplets." 4,
-    s solveXwing "X-Wing." 5,
-    s solveUniqueRectangle "Unique rectangle." 5,
-    s solveXyWing "XY-Wing." 6,
-    s pairContradictionSolver "Search via pair contradiction." 8]
+    s (applyWhileReduced removeSolved) RemoveBySolved 0,
+    s solveSingles Singles 0,
+    s solveBlockOmissions BlockOmission 1,
+    s solveOmitCandidateInOneBlock OmitCandidateInOneBlock 1,
+    s solveNakedPairs NakedPair 2,
+    s solveHiddenPair HiddenPair 2,
+    s solveNakedTriplets NakedTriplet 3,
+    s solveHiddenTriplet HiddenTriplet 4,
+    s solveXwing XWing 5,
+    s solveUniqueRectangle UniqueRectangle 5,
+    s solveXyWing XYWing 6,
+    s pairContradictionSolver PairContradiction 8]
+
+beginSolve :: Puzzle -> [SolutionStep]
+beginSolve puzzle = solve [IdleStep puzzle Initial]
+
+lastResult :: [SolutionStep] -> IdleStepId
+lastResult = fromJust . getStepId . head
+
+finalResult :: Puzzle -> IdleStepId
+finalResult = lastResult . beginSolve
 
 solve :: [SolutionStep] -> [SolutionStep]
 solve steps
@@ -225,9 +243,11 @@ searchSwordfish puzzle rowCol cand = selections
 
 -- Unique rectangle.
 
+solveUniqueRectangle :: Transformer
 solveUniqueRectangle puzzle = foldl applyRemover puzzle removers
     where removers = searchUniqueRect puzzle
 
+searchUniqueRect :: Puzzle -> [Transformer]
 searchUniqueRect puzzle = map removerFor $ filter validComb combs
     where pairs = filter hasPair puzzle
           combs = tripletCombinations pairs
@@ -296,11 +316,10 @@ xyCombinations xs = [[x, y1, y2]
 pairContradictionSolver :: Transformer
 pairContradictionSolver puzzle
     | null pairCells = puzzle
-    | otherwise = if lastStepIdVia p1 == Solved then p1 else p2
+    | otherwise = if finalResult p1 == Solved then p1 else p2
     where pairCells = take 1 $ filter hasPair puzzle
           pairCell = head pairCells
           cands = candidates pairCell
           solveWith cand = applyWhen (samePosWith pairCell) (setCellCandidate cand)
           p1 = solveWith (head cands) puzzle
           p2 = solveWith (last cands) puzzle
-          lastStepIdVia p = fromJust $ getStepId $ head $ solve [IdleStep p Initial]
