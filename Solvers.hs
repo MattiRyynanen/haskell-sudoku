@@ -39,7 +39,8 @@ solvers = let s = Solver in [
     s solveHiddenTriplet "Hidden triplets." 4,
     s solveXwing "X-Wing." 5,
     s solveUniqueRectangle "Unique rectangle." 5,
-    s solveXyWing "XY-Wing." 6]
+    s solveXyWing "XY-Wing." 6,
+    s pairContradictionSolver "Search via pair contradiction." 8]
 
 solve :: [SolutionStep] -> [SolutionStep]
 solve steps
@@ -287,3 +288,19 @@ xyCombinations xs = [[x, y1, y2]
     , xyCandsOk x y1 y2
     ]
     where xsi = zip xs [0..]
+
+-- Pair contradiction solver.
+-- Pick a pair. Try to solve with a candidate, if
+-- there's a InvalidSolution, it must be the other one.
+
+pairContradictionSolver :: Transformer
+pairContradictionSolver puzzle
+    | null pairCells = puzzle
+    | otherwise = if lastStepIdVia p1 == Solved then p1 else p2
+    where pairCells = take 1 $ filter hasPair puzzle
+          pairCell = head pairCells
+          cands = candidates pairCell
+          solveWith cand = applyWhen (samePosWith pairCell) (setCellCandidate cand)
+          p1 = solveWith (head cands) puzzle
+          p2 = solveWith (last cands) puzzle
+          lastStepIdVia p = fromJust $ getStepId $ head $ solve [IdleStep p Initial]
