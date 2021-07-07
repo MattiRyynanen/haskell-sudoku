@@ -3,15 +3,11 @@ Simple Sudoku solving with Haskell
 
 Build with
 
-    stack ghc sudoku-solver.hs
+    stack build
 
-and run with
+and run (and build possible changes) with
 
-    ./sudoku-solver.hs
-
-or compile and run
-
-    stack runghc sudoku-solver.hs
+    stack run
 
 Building for profiling
 
