@@ -1,7 +1,7 @@
 module Definitions where
 
-import Snippets
-import qualified Data.Char
+import Snippets ( hasOne, hasTwo, unique, allSame )
+import Data.Char ( digitToInt )
 
 type Index = Int
 type Candidate = Int
@@ -80,10 +80,10 @@ setBroadcasted :: Cell -> Cell
 setBroadcasted cell = cell { broadcasted = True }
 
 hasCand :: Candidate -> Cell -> Bool
-hasCand cand cell = cand `elem` candidates cell
+hasCand cand = elem cand . candidates
 
 hasNoCand :: Candidate -> Cell -> Bool
-hasNoCand cand cell = cand `notElem` candidates cell
+hasNoCand cand = notElem cand . candidates
 
 hasAnyCand :: [Candidate] -> Cell -> Bool
 hasAnyCand cands cell = any (`hasCand` cell) cands
@@ -118,5 +118,5 @@ loadPuzzle str
     | length puzzle == 81 && housesOk puzzle = Just puzzle
     | otherwise = Nothing
     where createCellWith i n = createCell i (createCandidatesFrom n)
-          createCandidatesFrom s = if s == '.' then [1..9] else [Data.Char.digitToInt s]
+          createCandidatesFrom s = if s == '.' then [1..9] else [digitToInt s]
           puzzle = zipWith createCellWith [0..] (filter (`elem` "123456789.") str)

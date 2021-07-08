@@ -1,8 +1,6 @@
 module Printers 
 (
-    printPuzzle,
     showPuzzle,
-    tellCell,
     showSolutions,
     showPuzzleNoCands
 )
@@ -41,18 +39,6 @@ showPuzzleNoCands p = intercalate line (map concat (group 3 rows))
 
 showPuzzle :: Puzzle -> String
 showPuzzle cells = showPuzzleChange cells cells
-
-showCellChange :: Cell -> Cell -> String
-showCellChange cur prev = concatMap (showCandChange (candidates cur) (candidates prev)) [1..9]
-
-showCandChange :: [Candidate] -> [Candidate] -> Candidate -> String
-showCandChange cur prev cand 
-    | cand `elem` cur && hasOne cur = withColor 32 $ show cand
-    | cand `elem` cur && hasTwo cur = withColor 33 $ show cand
-    | cand `elem` cur = show cand
-    | cand `elem` prev = withColor 31 $ show cand
-    | hasOne cur && cur == prev = " "
-    | otherwise = withColor 34 "."
 
 showCellChange2 :: Cell -> Cell -> String
 showCellChange2 cur prev = combineColored (candidates cur) (candidates prev)
@@ -94,12 +80,3 @@ showPuzzleChange cells previous = intercalate line (map concat (group 3 rows))
     where cellContents = [showCellChange2 c p | (c, p) <- zip cells previous]
           rows = map (('\n':) . intercalate "|") $ group 3 $ map unwords $ group 3 cellContents
           line = '\n' : intercalate "+" (replicate 3 (replicate 29 '-'))
-
-printPuzzle :: Puzzle -> IO ()
-printPuzzle cells = putStrLn $ showPuzzle cells
-
-posOf :: Cell -> String
-posOf c = concatMap (\f -> show $ f c) [rowOf, colOf, blockOf]
-
-tellCell :: Cell -> String
-tellCell c = unwords [posOf c, show (candidates c)]

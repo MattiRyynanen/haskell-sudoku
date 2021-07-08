@@ -32,6 +32,7 @@ getStepId :: SolutionStep -> Maybe IdleStepId
 getStepId (IdleStep _ id) = Just id
 getStepId SolverStep {} = Nothing
 
+applyWhileReduced :: Eq t => (t -> t) -> t -> t
 applyWhileReduced f puzzle =
     let reduced = f puzzle
     in if reduced == puzzle then puzzle else applyWhileReduced f reduced
@@ -155,9 +156,6 @@ searchNakedPair puzzle p = map removerFor $ filterWith [not . null, hasRemovals,
           isNakedPair pair = hasTwo $ filter (==pair) $ map candidates pair_cells
           hasRemovals pair = any (\cell -> hasAnyCand pair cell && candidates cell /= pair) unsolved
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
-
--- *Main> searchHiddenPair px ((==7) . rowOf)
--- [(2,[65,67]),(8,[65,67])]
 
 solveHiddenPair :: Transformer
 solveHiddenPair puzzle = applyRemovers puzzle removers
@@ -289,6 +287,7 @@ xyRemovalPos comb cell = all (intersectsEx cell) (drop 1 comb)
 
 xyRemovalCand :: [Cell] -> Candidate
 xyRemovalCand [x, y1, _] = head $ filter (`notElem` candidates x) (candidates y1)
+xyRemovalCand _ = error "Available for three cells only."
 
 searchXyWing :: Puzzle -> [[Cell]]
 searchXyWing puzzle = xyCombinations pairs
