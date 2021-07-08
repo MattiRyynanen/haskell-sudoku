@@ -56,7 +56,7 @@ isSolved :: Cell -> Bool
 isSolved = hasOne . candidates
 
 isUnsolved :: Cell -> Bool
-isUnsolved = not . hasOne . candidates
+isUnsolved = not . isSolved
 
 hasPair :: Cell -> Bool
 hasPair = hasTwo . candidates
