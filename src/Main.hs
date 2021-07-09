@@ -14,6 +14,7 @@ dispatch = [ ("session", session)
            , ("stats", stats)
            ]
 
+main :: IO ()
 main = do
     cargs <- getArgs
     if null cargs

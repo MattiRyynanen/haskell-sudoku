@@ -3,11 +3,11 @@ module Snippets where
 import Data.List (nub)
 
 applyWhen :: (b -> Bool) -> (b -> b) -> [b] -> [b]
-applyWhen pred func = map (applyIf pred func)
+applyWhen p f = map (applyIf p f)
 
 applyIf :: (p -> Bool) -> (p -> p) -> p -> p
-applyIf pred func x
-    | pred x = func x
+applyIf p f x
+    | p x = f x
     | otherwise = x
 
 hasOne :: [a] -> Bool
@@ -34,7 +34,7 @@ filterWith fs xs = foldl (flip filter) xs fs
 
 pairCombinations :: [a] -> [[a]]
 pairCombinations xs = [[a, b] | (a, i) <- xsi, (b, j) <- xsi, i < j]
-    where xsi = zip xs [0..]
+    where xsi = zip xs [0 :: Int ..]
 
 tripletCombinations :: [a] -> [[a]]
 tripletCombinations xs = [[a, b, c]
@@ -43,7 +43,7 @@ tripletCombinations xs = [[a, b, c]
     i < j,
     (c, k) <- items,
     j < k]
-    where items = zip xs [0..]
+    where items = zip xs [0 :: Int ..]
 
 countOccurences :: Eq a => [a] -> [(a, Int)]
 countOccurences xs = [(e, count e) | e <- elems]

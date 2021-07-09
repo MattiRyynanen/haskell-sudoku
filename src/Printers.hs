@@ -13,15 +13,15 @@ import Snippets
 import Solvers
 
 showSolution :: Int -> SolutionStep -> String
-showSolution minLevel (SolverStep result previous solver) = concat [show solver, " Unsolved cells = ", unsolved, puzzleStr]
-    where unsolved = show $ length $ filter isUnsolved result
-          puzzleStr = if level solver <= minLevel then "" else '\n' : showPuzzleChange result previous ++ "\n"
+showSolution minLevel (SolverStep res prev solv) = concat [show solv, " Unsolved cells = ", unsolved, puzzleStr]
+    where unsolved = show $ length $ filter isUnsolved res
+          puzzleStr = if level solv <= minLevel then "" else '\n' : showPuzzleChange res prev ++ "\n"
 
-showSolution _ (IdleStep puz id) = concat ["Step: ", show id, "\n", colorPz]
+showSolution _ (IdleStep puz stepId) = concat ["Step: ", show stepId, "\n", colorPz]
     where pz = showPuzzleNoCands puz
-          colorPz = case id of Solved -> withColor 32 pz
-                               NoSolution -> showPuzzle puz
-                               _ -> pz
+          colorPz = case stepId of Solved -> withColor (32 :: Int) pz
+                                   NoSolution -> showPuzzle puz
+                                   _ -> pz
 
 showSolutions :: [SolutionStep] -> String
 showSolutions xs = intercalate "\n" $ map (showSolution 1) (reverse xs)
@@ -76,7 +76,7 @@ getColor cur prev cand
     where currentCandidate = cand `elem` cur
 
 showPuzzleChange :: Puzzle -> Puzzle -> String
-showPuzzleChange cells previous = intercalate line (map concat (group 3 rows))
-    where cellContents = [showCellChange2 c p | (c, p) <- zip cells previous]
+showPuzzleChange cells prev = intercalate line (map concat (group 3 rows))
+    where cellContents = [showCellChange2 c p | (c, p) <- zip cells prev]
           rows = map (('\n':) . intercalate "|") $ group 3 $ map unwords $ group 3 cellContents
           line = '\n' : intercalate "+" (replicate 3 (replicate 29 '-'))
