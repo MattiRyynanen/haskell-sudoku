@@ -6,6 +6,7 @@ import Test.Hspec.QuickCheck
 import Test.QuickCheck
 
 import Data.List (nub)
+import qualified Data.Map as Map
 
 prop_hasOne :: [Int] -> Bool
 prop_hasOne xs = hasOne xs == (==1) (length xs)
@@ -25,3 +26,7 @@ spec = do
             allSame ["a", "a", "a"] `shouldBe` True
 
         prop "is same as having only one unique element" prop_allSame
+
+    describe "Snippet.countOccurrences" $ do
+        it "Counts occurrences" $ do
+            Map.toList (countOccurences "abcb") `shouldBe` [('a',1), ('b',2), ('c',1)]

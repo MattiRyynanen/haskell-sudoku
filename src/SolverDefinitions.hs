@@ -15,7 +15,7 @@ data SolverId = RemoveBySolved | Singles
 data Solver = Solver { transformer :: Transformer, identifier :: SolverId, level :: Int }
 instance Show Solver where show s = concat [show $ level s, ": ", show $ identifier s]
 
-data IdleStepId = Initial | Solved | NoSolution | InvalidSolution deriving (Eq, Show)
+data IdleStepId = Initial | Solved | NoSolution | InvalidSolution deriving (Eq, Ord, Show)
 
 data SolutionStep =
     IdleStep { puzzle :: Puzzle, step :: IdleStepId } | 

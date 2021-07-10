@@ -1,6 +1,7 @@
 module Snippets where
 
 import Data.List (nub)
+import qualified Data.Map as Map
 
 applyWhen :: (b -> Bool) -> (b -> b) -> [b] -> [b]
 applyWhen p f = map (applyIf p f)
@@ -38,14 +39,18 @@ pairCombinations xs = [[a, b] | (a, i) <- xsi, (b, j) <- xsi, i < j]
 
 tripletCombinations :: [a] -> [[a]]
 tripletCombinations xs = [[a, b, c]
-    | (a, i) <- items, 
+    | (a, i) <- items,
     (b, j) <- items,
     i < j,
     (c, k) <- items,
     j < k]
     where items = zip xs [0 :: Int ..]
 
-countOccurences :: Eq a => [a] -> [(a, Int)]
-countOccurences xs = [(e, count e) | e <- elems]
+countOccurences :: Ord a => [a] -> Map.Map a Int
+countOccurences = foldl (flip addOne) Map.empty
+    where addOne item = Map.insertWith (+) item 1
+
+countOccurences' :: Eq a => [a] -> [(a, Int)]
+countOccurences' xs = [(e, count e) | e <- elems]
     where elems = nub xs
           count e = length $ filter (==e) xs
