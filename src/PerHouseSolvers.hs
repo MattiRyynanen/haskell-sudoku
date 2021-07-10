@@ -1,14 +1,25 @@
-module PerHouseSolvers where
+module PerHouseSolvers
+(
+    solveSingles,
+    solveNakedPairs,
+    solveHiddenPair,
+    solveNakedTriplets,
+    solveHiddenTriplet
+)
+where
 
 import Snippets
 import Definitions
 import SolverDefinitions
 
+perHouseSolver :: Puzzle -> (Puzzle -> (Cell -> Bool) -> [Transformer]) -> Puzzle
+perHouseSolver puz houseTransformer = applyRemovers puz removers
+    where removers = concatMap (houseTransformer puz) houseSelectors
+
 -- Singles, only possibility solver:
 
 solveSingles :: Transformer
-solveSingles puz = applyRemovers puz removers
-    where removers = concatMap (searchSingles puz) houseSelectors
+solveSingles puz = perHouseSolver puz searchSingles
 
 searchSingles :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchSingles puz p = map removerFor singles
@@ -22,8 +33,7 @@ searchSingles puz p = map removerFor singles
 -- the numbers in elsewhere within the house can be removed.
 
 solveNakedPairs :: Transformer
-solveNakedPairs puz = applyRemovers puz removers
-    where removers = concatMap (searchNakedPair puz) houseSelectors
+solveNakedPairs puz = perHouseSolver puz searchNakedPair
 
 searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Transformer]
 searchNakedPair puz p = map removerFor $ filterWith [not . null, hasRemovals, isNakedPair] unique_pairs
@@ -51,8 +61,7 @@ searchHiddenPair puz selector = posCands
           posCands = [(pos, candsForP pos) | pos <- unique_positions, hasTwo $ candsForP pos]
 
 solveNakedTriplets :: Transformer
-solveNakedTriplets puz = applyRemovers puz removers
-    where removers = concatMap (searchNakedTriplets puz) houseSelectors
+solveNakedTriplets puz = perHouseSolver puz searchNakedTriplets
 
 searchNakedTriplets :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchNakedTriplets puz p
@@ -67,8 +76,7 @@ searchNakedTriplets puz p
           removerFor comb = applyWhen (\c -> p c && index c `notElem` indicesFor comb) (removeCellCandidates (candidatesIn comb))
 
 solveHiddenTriplet :: Transformer
-solveHiddenTriplet puz = applyRemovers puz removers
-    where removers = concatMap (searchHiddenTriplet puz) houseSelectors
+solveHiddenTriplet puz = perHouseSolver puz searchHiddenTriplet
 
 searchHiddenTriplet :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchHiddenTriplet puz p
