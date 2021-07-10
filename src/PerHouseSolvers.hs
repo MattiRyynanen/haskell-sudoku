@@ -9,6 +9,7 @@ module PerHouseSolvers
 )
 where
 
+import qualified Data.Map as Map
 import Snippets
 import Definitions
 import SolverDefinitions
@@ -30,9 +31,8 @@ searchSingles puz p = map removerFor singles
           removerFor cand = applyWhen (\c -> p c && hasCand cand c) (setCellCandidate cand)
 
 findSingles :: [Cell] -> [Candidate]
-findSingles cells = filter isSingle $ uniqueCandidates unsolved
-    where unsolved = filter isUnsolved cells
-          isSingle cand = hasOne $ withCandidate cand unsolved
+findSingles = Map.keys . Map.filter (==1) . countOccurences
+    . concatMap candidates . filter isUnsolved
 
 -- Solving Naked pair
 -- If row, column, or block contains two pairs with exactly same candidates,
