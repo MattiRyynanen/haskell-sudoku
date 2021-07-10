@@ -31,7 +31,9 @@ test-suite haskell-sudoku-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_haskell_sudoku, SnippetsSpec
+      Paths_haskell_sudoku,
+      SnippetsSpec,
+      PerHouseSolversSpec
   hs-source-dirs:
       test
   build-depends:

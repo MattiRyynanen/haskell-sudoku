@@ -4,7 +4,8 @@ module PerHouseSolvers
     solveNakedPairs,
     solveHiddenPair,
     solveNakedTriplets,
-    solveHiddenTriplet
+    solveHiddenTriplet,
+    findSingles
 )
 where
 
@@ -27,6 +28,11 @@ searchSingles puz p = map removerFor singles
           singles = filter isSingle $ uniqueCandidates unsolved
           isSingle cand = hasOne $ withCandidate cand unsolved
           removerFor cand = applyWhen (\c -> p c && hasCand cand c) (setCellCandidate cand)
+
+findSingles :: [Cell] -> [Candidate]
+findSingles cells = filter isSingle $ uniqueCandidates unsolved
+    where unsolved = filter isUnsolved cells
+          isSingle cand = hasOne $ withCandidate cand unsolved
 
 -- Solving Naked pair
 -- If row, column, or block contains two pairs with exactly same candidates,
