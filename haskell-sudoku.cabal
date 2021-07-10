@@ -26,3 +26,17 @@ executable haskell-sudoku.exe
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5, haskell-sudoku
   other-modules:       Paths_haskell_sudoku
+
+test-suite haskell-sudoku-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_haskell_sudoku
+  hs-source-dirs:
+      test
+  build-depends:
+      base >=4.7 && <5
+    , hspec >= 1.3
+    , QuickCheck
+    , haskell-sudoku
+  default-language: Haskell2010
