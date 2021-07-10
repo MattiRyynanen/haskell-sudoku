@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 extra-source-files:  README.md
 
 library
-  exposed-modules:     Snippets, Definitions, Printers, Solvers
+  exposed-modules:     Snippets, Definitions, SolverDefinitions, Printers, PerHouseSolvers, Solvers
   other-modules:       Paths_haskell_sudoku
   hs-source-dirs:      src
   build-depends:       base >= 4.7 && < 5

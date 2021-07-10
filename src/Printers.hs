@@ -10,7 +10,7 @@ import Data.List (intercalate)
 import Data.Maybe
 import Definitions
 import Snippets
-import Solvers
+import SolverDefinitions
 
 showSolution :: Int -> SolutionStep -> String
 showSolution minLevel (SolverStep res prev solv) = concat [show solv, " Unsolved cells = ", unsolved, puzzleStr]
