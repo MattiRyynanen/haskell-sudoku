@@ -41,12 +41,8 @@ solveNakedPairs :: Transformer
 solveNakedPairs puz = perHouseSolver puz searchNakedPair
 
 searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Transformer]
-searchNakedPair puz p = map removerFor $ filterWith [not . null, hasRemovals, isNakedPair] unique_pairs
-    where unsolved = filterWith [p, isUnsolved] puz
-          pair_cells = filter hasPair unsolved
-          unique_pairs = unique $ map candidates pair_cells
-          isNakedPair pair = hasTwo $ filter (==pair) $ map candidates pair_cells
-          hasRemovals pair = any (\cell -> hasAnyCand pair cell && candidates cell /= pair) unsolved
+searchNakedPair puz p = map removerFor $ findNakedPairs house
+    where house = filter p puz
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
 
 findNakedPairs :: [Cell] -> [[Candidate]]
