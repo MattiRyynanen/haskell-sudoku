@@ -15,7 +15,6 @@ extra-source-files:  README.md
 
 library
   exposed-modules:     Snippets, Definitions, SolverDefinitions, Printers, PerHouseSolvers, Solvers
-  other-modules:       Paths_haskell_sudoku
   hs-source-dirs:      src
   build-depends:       base >= 4.7 && < 5, containers
   default-language:    Haskell2010
@@ -25,13 +24,11 @@ executable haskell-sudoku.exe
   main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5, haskell-sudoku
-  other-modules:       Paths_haskell_sudoku
 
 test-suite haskell-sudoku-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_haskell_sudoku,
       SnippetsSpec,
       PerHouseSolversSpec
   hs-source-dirs:
