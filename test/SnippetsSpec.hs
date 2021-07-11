@@ -29,4 +29,4 @@ spec = do
 
     describe "Snippet.countOccurrences" $ do
         it "Counts occurrences" $ do
-            Map.toList (countOccurences "abcb") `shouldBe` [('a',1), ('b',2), ('c',1)]
+            Map.toList (countOccurrences "abcb") `shouldBe` [('a',1), ('b',2), ('c',1)]

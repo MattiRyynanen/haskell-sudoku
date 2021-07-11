@@ -51,7 +51,7 @@ stats :: Program
 stats _ = do
     contents <- getContents
     let results = map finalResult (loadPuzzlesFrom contents)
-        occurences = countOccurences results
+        occurences = countOccurrences results
     print occurences
 
 loadPuzzlesFrom :: String -> [Puzzle]

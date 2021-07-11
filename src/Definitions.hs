@@ -19,12 +19,35 @@ instance Show Cell where show c = concat [show $ rowOf c, show $ colOf c, ":", c
 
 type Puzzle = [Cell]
 
+{- Creates a sudoku cell with given position index and candidates.
+
+>>> createCell 0 [1,2,3]
+00:123
+-}
 createCell :: Index -> [Candidate] -> Cell
 createCell i cands = Cell { index = i, rowOf = rowAt i, colOf = colAt i, blockOf = blockAt i, candidates = cands, broadcasted = False }
 
-createEmptyPuzzle :: Puzzle
-createEmptyPuzzle = [createCell i [1..9] | i <- [0..80]]
+{- Creates sudoku cells with candidates and increasing position index.
 
+>>> createCells [[1,2,3],[4,5],[6]]
+[00:123,01:45,02:6]
+-}
+createCells :: [[Candidate]] -> [Cell]
+createCells = zipWith createCell [0 ..]
+
+{- Creates an empty 9x9 Sudoku puzzle cells.
+
+>>> length createEmptyPuzzle
+81
+-}
+createEmptyPuzzle :: Puzzle
+createEmptyPuzzle = createCells $ replicate (9 * 9) [1 .. 9]
+
+{-| Returns True if cells have the same index.
+
+>>> map (samePosWith (createCell 0 [1])) $ createCells [[1], [1,2]]
+[True,False]
+-}
 samePosWith :: Cell -> (Cell -> Bool)
 samePosWith = sameBy index
 

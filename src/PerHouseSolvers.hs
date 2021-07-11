@@ -34,7 +34,7 @@ searchSingles puz p = map removerFor $ findSingles house
           removerFor cand = applyWhen (\c -> p c && hasCand cand c) (setCellCandidate cand)
 
 findSingles :: [Cell] -> [Candidate]
-findSingles = Map.keys . Map.filter (==1) . countOccurences
+findSingles = Map.keys . Map.filter (==1) . countOccurrences
     . concatMap candidates . filter isUnsolved
 
 -- Solving Naked pair
@@ -50,7 +50,7 @@ searchNakedPair puz p = map removerFor $ findNakedPairs house
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
 
 findNakedPairs :: [Cell] -> [[Candidate]]
-findNakedPairs = Map.keys . Map.filter (==2) . countOccurences
+findNakedPairs = Map.keys . Map.filter (==2) . countOccurrences
     . filter hasTwo . map candidates
 
 -- Hidden pairs: two candidates in a house appear only in the same two locations.
@@ -80,6 +80,11 @@ findHiddenPairs cells = posCands
           candsForP pos = map snd $ filter ((==pos) . fst) twoPosCands
           posCands = [(pos, candsForP pos) | pos <- unique_positions, hasTwo $ candsForP pos]
 
+{- | Creates a map of candidates as keys and list of their positions as values.
+
+>>> candidatePosMap $ createCells [[2,3,4], [3,4,5], [8]]
+fromList [(2,[0]),(3,[0,1]),(4,[0,1]),(5,[1]),(8,[2])]
+-}
 candidatePosMap :: Foldable t => t Cell -> IntMap.IntMap [Index]
 candidatePosMap = foldl addCell IntMap.empty
     where addCell m cell = foldl (addCand $ index cell) m (candidates cell)
