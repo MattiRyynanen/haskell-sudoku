@@ -6,11 +6,15 @@ module PerHouseSolvers
     solveNakedTriplets,
     solveHiddenTriplet,
     findSingles,
-    findNakedPairs
+    findNakedPairs,
+    findHiddenPairs,
+    candidatePosMap
 )
 where
 
-import qualified Data.Map as Map
+import qualified Data.Map.Strict as Map
+import qualified Data.IntMap.Strict as IntMap
+
 import Snippets
 import Definitions
 import SolverDefinitions
@@ -49,6 +53,8 @@ findNakedPairs :: [Cell] -> [[Candidate]]
 findNakedPairs = Map.keys . Map.filter (==2) . countOccurences
     . filter hasTwo . map candidates
 
+-- Hidden pairs: two candidates in a house appear only in the same two locations.
+
 solveHiddenPair :: Transformer
 solveHiddenPair puz = applyRemovers puz removers
     where ps = concatMap (searchHiddenPair puz) houseSelectors
@@ -64,6 +70,22 @@ searchHiddenPair puz selector = posCands
           unique_positions = unique $ map fst twoPosCands
           candsForP pos = map snd $ filter ((==pos) . fst) twoPosCands
           posCands = [(pos, candsForP pos) | pos <- unique_positions, hasTwo $ candsForP pos]
+
+findHiddenPairs :: [Cell] -> [([Index], [Candidate])]
+findHiddenPairs cells = posCands
+    where unique_cands = unique $ concatMap candidates cells
+          positionsFor cand = map index $ filter (hasCand cand) cells
+          twoPosCands = [(positionsFor cand, cand) | cand <- unique_cands, hasTwo $ positionsFor cand]
+          unique_positions = unique $ map fst twoPosCands
+          candsForP pos = map snd $ filter ((==pos) . fst) twoPosCands
+          posCands = [(pos, candsForP pos) | pos <- unique_positions, hasTwo $ candsForP pos]
+
+candidatePosMap :: Foldable t => t Cell -> IntMap.IntMap [Index]
+candidatePosMap = foldl addCell IntMap.empty
+    where addCell m cell = foldl (addCand $ index cell) m (candidates cell)
+          addCand pos m cand = IntMap.insertWith (flip (++)) cand [pos] m
+
+-- Naked triplets.
 
 solveNakedTriplets :: Transformer
 solveNakedTriplets puz = perHouseSolver puz searchNakedTriplets

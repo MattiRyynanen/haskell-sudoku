@@ -1,7 +1,7 @@
 module Snippets where
 
 import Data.List (nub)
-import qualified Data.Map as Map
+import qualified Data.Map.Strict as Map
 
 applyWhen :: (b -> Bool) -> (b -> b) -> [b] -> [b]
 applyWhen p f = map (applyIf p f)
