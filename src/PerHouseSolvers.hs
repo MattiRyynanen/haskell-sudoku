@@ -24,10 +24,8 @@ solveSingles :: Transformer
 solveSingles puz = perHouseSolver puz searchSingles
 
 searchSingles :: Puzzle -> (Cell -> Bool) -> [Transformer]
-searchSingles puz p = map removerFor singles
-    where unsolved = filterWith [p, isUnsolved] puz
-          singles = filter isSingle $ uniqueCandidates unsolved
-          isSingle cand = hasOne $ withCandidate cand unsolved
+searchSingles puz p = map removerFor $ findSingles house
+    where house = filter p puz
           removerFor cand = applyWhen (\c -> p c && hasCand cand c) (setCellCandidate cand)
 
 findSingles :: [Cell] -> [Candidate]
