@@ -5,7 +5,8 @@ module PerHouseSolvers
     solveHiddenPair,
     solveNakedTriplets,
     solveHiddenTriplet,
-    findSingles
+    findSingles,
+    findNakedPairs
 )
 where
 
@@ -47,6 +48,10 @@ searchNakedPair puz p = map removerFor $ filterWith [not . null, hasRemovals, is
           isNakedPair pair = hasTwo $ filter (==pair) $ map candidates pair_cells
           hasRemovals pair = any (\cell -> hasAnyCand pair cell && candidates cell /= pair) unsolved
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
+
+findNakedPairs :: [Cell] -> [[Candidate]]
+findNakedPairs = Map.keys . Map.filter (==2) . countOccurences
+    . filter hasTwo . map candidates
 
 solveHiddenPair :: Transformer
 solveHiddenPair puz = applyRemovers puz removers
