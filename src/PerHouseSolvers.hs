@@ -2,7 +2,7 @@ module PerHouseSolvers
 (
     solveSingles,
     solveNakedPairs,
-    solveHiddenPair,
+    solveHiddenPairs,
     solveNakedTriplets,
     solveHiddenTriplet,
     findSingles,
@@ -44,7 +44,7 @@ findSingles = Map.keys . Map.filter (==1) . countOccurrences
 solveNakedPairs :: Transformer
 solveNakedPairs puz = perHouseSolver puz searchNakedPair
 
-searchNakedPair :: [Cell] -> (Cell -> Bool) -> [Transformer]
+searchNakedPair :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchNakedPair puz p = map removerFor $ findNakedPairs house
     where house = filter p puz
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
@@ -55,30 +55,30 @@ findNakedPairs = Map.keys . Map.filter (==2) . countOccurrences
 
 -- Hidden pairs: two candidates in a house appear only in the same two locations.
 
-solveHiddenPair :: Transformer
-solveHiddenPair puz = applyRemovers puz removers
-    where ps = concatMap (searchHiddenPair puz) houseSelectors
-          removerFor p = applyWhen (\c -> index c `elem` fst p) (setCellCandidates $ snd p)
-          removers = map removerFor ps
+solveHiddenPairs :: Transformer
+solveHiddenPairs puz = perHouseSolver puz searchHiddenPairs
 
-searchHiddenPair :: Puzzle -> (Cell -> Bool) -> [([Index], [Candidate])]
-searchHiddenPair puz selector = posCands
-    where unsolved = filterWith [selector, isUnsolved] puz
-          unique_cands = unique $ concatMap candidates unsolved
-          positionsFor cand = map index $ filter (hasCand cand) unsolved
-          twoPosCands = [(positionsFor cand, cand) | cand <- unique_cands, hasTwo $ positionsFor cand]
-          unique_positions = unique $ map fst twoPosCands
-          candsForP pos = map snd $ filter ((==pos) . fst) twoPosCands
-          posCands = [(pos, candsForP pos) | pos <- unique_positions, hasTwo $ candsForP pos]
+searchHiddenPairs :: Puzzle -> (Cell -> Bool) -> [Transformer]
+searchHiddenPairs puz p = map removerFor $ findHiddenPairs house
+    where house = filter p puz
+          removerFor pc = applyWhen (\c -> p c && index c `elem` fst pc) (setCellCandidates $ snd pc)
+
+{- | findHiddenPairs returns a list of (positions, candidates)
+where the candidates only appear.
+
+>>> let house = createCells [[2,3,4], [3,4,5], [5,6], [8]]
+>>> house
+>>> findHiddenPairs house
+[00:234,01:345,02:56,03:8]
+[([0,1],[3,4])]
+-}
 
 findHiddenPairs :: [Cell] -> [([Index], [Candidate])]
 findHiddenPairs cells = posCands
-    where unique_cands = unique $ concatMap candidates cells
-          positionsFor cand = map index $ filter (hasCand cand) cells
-          twoPosCands = [(positionsFor cand, cand) | cand <- unique_cands, hasTwo $ positionsFor cand]
-          unique_positions = unique $ map fst twoPosCands
-          candsForP pos = map snd $ filter ((==pos) . fst) twoPosCands
-          posCands = [(pos, candsForP pos) | pos <- unique_positions, hasTwo $ candsForP pos]
+    where candMap = candidatePosMap cells
+          uniquePositions = unique $ IntMap.elems $ IntMap.filter hasTwo candMap
+          candsWithPos pos = IntMap.keys $ IntMap.filter (== pos) candMap
+          posCands = [(pos, candsWithPos pos) | pos <- uniquePositions, hasTwo $ candsWithPos pos]
 
 {- | Creates a map of candidates as keys and list of their positions as values.
 

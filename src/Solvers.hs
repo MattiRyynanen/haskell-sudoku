@@ -15,7 +15,7 @@ solvers = let s = Solver in [
     s solveBlockOmissions BlockOmission 1,
     s solveOmitCandidateInOneBlock OmitCandidateInOneBlock 1,
     s solveNakedPairs NakedPair 2,
-    s solveHiddenPair HiddenPair 2,
+    s solveHiddenPairs HiddenPair 2,
     s solveNakedTriplets NakedTriplet 3,
     s solveHiddenTriplet HiddenTriplet 4,
     s solveXwing XWing 5,
