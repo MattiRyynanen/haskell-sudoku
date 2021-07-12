@@ -72,10 +72,7 @@ searchHiddenPairs puz p = map removerFor $ findHiddenPairs house
 {- | findHiddenPairs returns a list of (positions, candidates)
 where the candidates only appear.
 
->>> let house = createCells [[2,3,4], [3,4,5], [5,6], [8]]
->>> house
->>> findHiddenPairs house
-[00:234,01:345,02:56,03:8]
+>>> findHiddenPairs $ createCells [[2,3,4], [3,4,5], [5,6], [8]]
 [([0,1],[3,4])]
 -}
 
