@@ -49,6 +49,12 @@ searchNakedPair puz p = map removerFor $ findNakedPairs house
     where house = filter p puz
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
 
+{- | findNakedPairs returns pairs appearing twice in a house.
+
+>>> findNakedPairs $ createCells [[1,3],[1,5],[1,3],[1,4,5]]
+[[1,3]]
+-}
+
 findNakedPairs :: [Cell] -> [[Candidate]]
 findNakedPairs = Map.keys . Map.filter (==2) . countOccurrences
     . filter hasTwo . map candidates
