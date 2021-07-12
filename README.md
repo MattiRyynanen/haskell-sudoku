@@ -11,8 +11,8 @@ and run (and build possible changes) with
 
 Building for profiling
 
-    stack ghc -- -prof -fprof-auto -rtsopts sudoku-solver.hs
+    stack build --profile
 
 And then running with profiling
 
-    cat puzzles.txt | ./sudoku-solver +RTS -p
+    cat puzzles.txt | stack exec --profile haskell-sudoku.exe session -- +RTS -p
