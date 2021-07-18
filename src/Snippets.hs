@@ -2,6 +2,8 @@ module Snippets where
 
 import Data.List (nub)
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import Data.Foldable
 
 applyWhen :: (b -> Bool) -> (b -> b) -> [b] -> [b]
 applyWhen p f = map (applyIf p f)
@@ -99,13 +101,6 @@ countOccurrences = foldl (flip addOne) Map.empty
 
 >>> updateAt 9 (*10) [0..9]
 [0,1,2,3,4,5,6,7,8,90]
-
->>> updateAt 10 (*10) [0..9]
-Index out of range
 -}
 updateAt :: Int -> (a -> a) -> [a] -> [a]
-updateAt i f xs
-    | null rest = error "Index out of range"
-    | otherwise = start ++ f r1 : r2
-    where (start, rest) = splitAt i xs
-          r1:r2 = rest
+updateAt i f xs = toList $ Seq.adjust' f i (Seq.fromList xs)
