@@ -75,3 +75,18 @@ fromList [('a',2),('b',1),('c',3),('d',4)]
 countOccurrences :: Foldable t => Ord a => t a -> Map.Map a Int
 countOccurrences = foldl (flip addOne) Map.empty
     where addOne item = Map.insertWith (+) item 1
+
+{- | Update element at given index.
+
+>>> updateAt 9 (*10) [0..9]
+[0,1,2,3,4,5,6,7,8,90]
+
+>>> updateAt 10 (*10) [0..9]
+Index out of range
+-}
+updateAt :: Int -> (a -> a) -> [a] -> [a]
+updateAt i f xs
+    | null rest = error "Index out of range"
+    | otherwise = start ++ f r1 : r2
+    where (start, rest) = splitAt i xs
+          r1:r2 = rest
