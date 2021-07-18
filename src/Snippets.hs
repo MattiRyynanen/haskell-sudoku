@@ -33,6 +33,25 @@ hasTwo :: [a] -> Bool
 hasTwo [_, _] = True
 hasTwo _ = False
 
+{- | Returns True if elem in is ordered list.
+
+>>> elemInOrdered 7 [1,3,7,7]
+True
+
+>>> elemInOrdered 7 [6,9,12]
+False
+
+>>> elemInOrdered 7 []
+False
+-}
+elemInOrdered :: Ord a => a -> [a] -> Bool
+elemInOrdered x = check
+    where check [] = False
+          check (y:ys) = case x `compare` y of
+                             LT -> False
+                             EQ -> True
+                             GT -> check ys
+
 group :: Int -> [a] -> [[a]]
 group _ [] = []
 group c xs = take c xs : group c (drop c xs)

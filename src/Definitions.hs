@@ -1,6 +1,6 @@
 module Definitions where
 
-import Snippets ( hasOne, hasTwo, unique, allSame )
+import Snippets ( hasOne, hasTwo, unique, allSame, elemInOrdered )
 import Data.Char ( digitToInt )
 
 type Index = Int
@@ -103,10 +103,7 @@ setBroadcasted :: Cell -> Cell
 setBroadcasted cell = cell { broadcasted = True }
 
 hasCand :: Candidate -> Cell -> Bool
-hasCand cand = elem cand . candidates
-
-hasNoCand :: Candidate -> Cell -> Bool
-hasNoCand cand = notElem cand . candidates
+hasCand cand = elemInOrdered cand . candidates
 
 hasAnyCand :: [Candidate] -> Cell -> Bool
 hasAnyCand cands cell = any (`hasCand` cell) cands
@@ -130,7 +127,7 @@ joint f cells
 housesOk :: Puzzle -> Bool
 housesOk puzzle = all isValid houseSelectors
     where solved = filter isSolved puzzle
-          isValid house = let b = filter house solved in (length b == uniqueCands b)
+          isValid house = let b = take 9 $ filter house solved in (length b == uniqueCands b)
           uniqueCands = length . unique . map candidates
 
 hasZeroCandidates :: Puzzle -> Bool

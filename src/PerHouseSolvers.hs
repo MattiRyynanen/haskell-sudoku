@@ -30,8 +30,9 @@ solveSingles puz = perHouseSolver puz searchSingles
 
 searchSingles :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchSingles puz p = map removerFor $ findSingles house
-    where house = filter p puz
-          removerFor cand = applyWhen (\c -> p c && hasCand cand c) (setCellCandidate cand)
+    where house = take 9 $ filter p puz
+          indexToUpdate cand = index $ head $ filter (hasCand cand) house
+          removerFor cand = updateAt (indexToUpdate cand) (setCellCandidate cand)
 
 findSingles :: [Cell] -> [Candidate]
 findSingles = Map.keys . Map.filter (==1) . countOccurrences
@@ -46,7 +47,7 @@ solveNakedPairs puz = perHouseSolver puz searchNakedPair
 
 searchNakedPair :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchNakedPair puz p = map removerFor $ findNakedPairs house
-    where house = filter p puz
+    where house = take 9 $ filter p puz
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
 
 {- | findNakedPairs returns pairs appearing twice in a house.
@@ -66,7 +67,7 @@ solveHiddenPairs puz = perHouseSolver puz searchHiddenPairs
 
 searchHiddenPairs :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchHiddenPairs puz p = map removerFor $ findHiddenPairs house
-    where house = filter p puz
+    where house = take 9 $ filter p puz
           removerFor pc = applyWhen (\c -> p c && index c `elem` fst pc) (setCellCandidates $ snd pc)
 
 {- | findHiddenPairs returns a list of (positions, candidates)
