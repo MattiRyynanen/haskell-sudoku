@@ -55,7 +55,7 @@ broadcastSolved :: Puzzle -> Cell -> Puzzle
 broadcastSolved puz cell
     | broadcasted cell = puz -- already done
     | isUnsolved cell = puz -- nothing to broadcast
-    | otherwise = applyWhen (samePosWith cell) setBroadcasted bs
+    | otherwise = updateAt (index cell) setBroadcasted bs
     where final = head $ candidates cell
           isApplicable c = isUnsolved c && hasCand final c && intersects c cell
           bs = applyWhen isApplicable (removeCellCandidate final) puz
