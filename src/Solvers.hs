@@ -38,14 +38,14 @@ solve steps
     | not $ housesOk latest changedHousesFromPrevious = addIdleStep InvalidSolution
     | hasZeroCandidates latest = addIdleStep InvalidSolution
     | all isSolved latest = addIdleStep Solved
-    | isJust simplestSolver = solve $ prepend $ stepFor simplestSolver
+    | isJust simplestSolver = solve $ prepend $ fromJust simplestSolver
     | otherwise = addIdleStep NoSolution
     where latest = getPuzzle $ head steps -- the latest puzzle
-          simplestSolver = find (\s -> transformer s latest /= latest) solvers
+          simplestSolver = find (\s -> result s /= previous s) $ map stepFor solvers
           prepend s = s : steps
           precedingPuzzle = getPuzzle $ if length steps > 1 then steps !! 1 else head steps
           changedHousesFromPrevious = housesOf (changedCells latest precedingPuzzle)
-          stepFor solv = let s = fromJust solv in SolverStep (transformer s latest) latest s
+          stepFor solv = SolverStep (transformer solv latest) latest solv
           addIdleStep stepId = prepend $ IdleStep latest stepId
 
 changedCells :: Puzzle -> Puzzle -> [Cell]
