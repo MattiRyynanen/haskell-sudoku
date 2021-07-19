@@ -36,8 +36,8 @@ solve :: [SolutionStep] -> [SolutionStep]
 solve steps
     | null steps = error "Nothing to solve."
     | not $ housesOk latest = addIdleStep InvalidSolution
-    | hasZeroCandidates latest = addIdleStep InvalidSolution
-    | all isSolved latest = addIdleStep Solved
+    | hasZeroCandidates (pcells latest) = addIdleStep InvalidSolution
+    | all isSolved (pcells latest) = addIdleStep Solved
     | isJust simplestSolver = solve $ prepend $ stepFor simplestSolver
     | otherwise = addIdleStep NoSolution
     where latest = getPuzzle $ head steps -- the latest puzzle
@@ -58,7 +58,7 @@ broadcastSolved puz cell
     | otherwise = updateAt (index cell) setBroadcasted bs
     where final = head $ candidates cell
           isApplicable c = isUnsolved c && hasCand final c && intersects c cell
-          bs = applyWhen isApplicable (removeCellCandidate final) puz
+          bs = applyWhen isApplicable (removeCellCandidate final) (pcells puz)
 
 -- Block omission, candidates within one block on one row or column, only.
 -- Can remove the possible candidates on that row or column on adjacent block.
@@ -70,7 +70,7 @@ solveBlockOmissions puz = applyRemovers puz (rowRemovers ++ colRemovers)
 
 searchBlockOmissionBy :: (Cell -> Index) -> Puzzle -> Index -> [Transformer]
 searchBlockOmissionBy indexer puz blockIndex = removers
-    where unsolved = filterWith [(==blockIndex) . blockOf, isUnsolved] puz
+    where unsolved = filterWith [(==blockIndex) . blockOf, isUnsolved] (pcells puz)
           cands = uniqueCandidates unsolved
           check cand = joint indexer (withCandidate cand unsolved)
           removerFor ind cand = applyWhen (\c -> indexer c == ind && blockOf c /= blockIndex) (removeCellCandidate cand)
@@ -86,7 +86,7 @@ solveOmitCandidateInOneBlock puz = applyRemovers puz removers
 
 searchOmitCandidateInOneBlock :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchOmitCandidateInOneBlock puz p = removers
-    where unsolved = filterWith [p, isUnsolved] puz
+    where unsolved = filterWith [p, isUnsolved] (pcells puz)
           cands = uniqueCandidates unsolved
           check cand = joint blockOf (withCandidate cand unsolved)
           removerFor blockInd cand = applyWhen (\c -> not (p c) && blockOf c == blockInd) (removeCellCandidate cand)
@@ -102,7 +102,7 @@ searchXwing :: Puzzle -> String -> Candidate -> [Transformer]
 searchXwing puz selId cand
     | length unsolved <= 4 = []
     | otherwise = map removerFor (concatMap removalCells validCombs)
-    where unsolved = filterWith [hasCand cand, isUnsolved] puz
+    where unsolved = filterWith [hasCand cand, isUnsolved] (pcells puz)
           ops = if selId == "rows" then (rowOf, colOf) else (colOf, rowOf)
           selector i = map (snd ops) $ filter ((==i) . fst ops) unsolved
           twoPos f = [(i, f i) | i <- [0..8], hasTwo $ f i]
@@ -133,7 +133,7 @@ solveUniqueRectangle puz = applyRemovers puz (searchUniqueRect puz)
 
 searchUniqueRect :: Puzzle -> [Transformer]
 searchUniqueRect puz = map removerFor $ filter validComb combs
-    where pairs = filter hasPair puz
+    where pairs = filter hasPair (pcells puz)
           combs = tripletCombinations pairs
           ops = [rowOf, colOf]
           maxTwoBlock = (<3) . length . unique . map blockOf
@@ -174,7 +174,7 @@ xyRemovalCand _ = error "Available for three cells only."
 
 searchXyWing :: Puzzle -> [[Cell]]
 searchXyWing puz = xyCombinations pairs
-    where pairs = filter hasPair puz
+    where pairs = filter hasPair (pcells puz)
 
 xyPosOk :: Cell -> Cell -> Cell -> Bool
 xyPosOk x y1 y2 = intersectsEx x y1 && intersectsEx x y2 && not (intersectsEx y1 y2)
@@ -202,7 +202,7 @@ pairContradictionSolver :: Transformer
 pairContradictionSolver puz
     | null pairCells = puz
     | otherwise = if finalResult p1 == Solved then p1 else p2
-    where pairCells = take 1 $ filter hasPair puz
+    where pairCells = take 1 $ filter hasPair (pcells puz)
           pairCell = head pairCells
           cands = candidates pairCell
           solveWith cand = applyWhen (samePosWith pairCell) (setCellCandidate cand)

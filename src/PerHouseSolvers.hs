@@ -30,7 +30,7 @@ solveSingles puz = perHouseSolver puz searchSingles
 
 searchSingles :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchSingles puz p = map removerFor $ findSingles house
-    where house = take 9 $ filter p puz
+    where house = take 9 $ filter p (pcells puz) :: [Cell]
           indexToUpdate cand = index $ head $ filter (hasCand cand) house
           removerFor cand = updateAt (indexToUpdate cand) (setCellCandidate cand)
 
@@ -47,7 +47,7 @@ solveNakedPairs puz = perHouseSolver puz searchNakedPair
 
 searchNakedPair :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchNakedPair puz p = map removerFor $ findNakedPairs house
-    where house = take 9 $ filter p puz
+    where house = take 9 $ filter p (pcells puz)
           removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
 
 {- | findNakedPairs returns pairs appearing twice in a house.
@@ -67,7 +67,7 @@ solveHiddenPairs puz = perHouseSolver puz searchHiddenPairs
 
 searchHiddenPairs :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchHiddenPairs puz p = map removerFor $ findHiddenPairs house
-    where house = take 9 $ filter p puz
+    where house = take 9 $ filter p (pcells puz)
           removerFor pc = applyWhen (\c -> p c && index c `elem` fst pc) (setCellCandidates $ snd pc)
 
 {- | findHiddenPairs returns a list of (positions, candidates)
@@ -103,7 +103,7 @@ searchNakedTriplets :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchNakedTriplets puz p
     | length unsolved <= 3 = []
     | otherwise = map removerFor validCombs
-    where unsolved = filterWith [p, isUnsolved] puz
+    where unsolved = filterWith [p, isUnsolved] (pcells puz)
           combinations = tripletCombinations unsolved
           hasThreeCandidates comb = (==3) $ length $ candidatesIn comb
           candidatesIn comb = unique $ concatMap candidates comb
@@ -118,7 +118,7 @@ searchHiddenTriplet :: Puzzle -> (Cell -> Bool) -> [Transformer]
 searchHiddenTriplet puz p
     | length unsolved <= 3 = []
     | otherwise = map removerFor validCombs
-    where unsolved = filterWith [p, isUnsolved] puz
+    where unsolved = filterWith [p, isUnsolved] (pcells puz)
           unique_cands = unique $ concatMap candidates unsolved
           positionsFor cand = map index $ filter (hasCand cand) unsolved
           tripletPosCands = [(positionsFor cand, cand) | cand <- unique_cands, (<=3) $ length $ positionsFor cand]
