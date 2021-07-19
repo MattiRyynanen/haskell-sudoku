@@ -66,7 +66,7 @@ broadcastSolved puz cell
     | isUnsolved cell = puz -- nothing to broadcast
     | otherwise = updateAt (index cell) setBroadcasted bs
     where final = head $ candidates cell
-          isApplicable c = isUnsolved c && hasCand final c && intersects c cell
+          isApplicable c = isUnsolved c && hasCand final c && intersects cell c
           bs = applyWhen isApplicable (removeCellCandidate final) puz
 
 -- Block omission, candidates within one block on one row or column, only.
