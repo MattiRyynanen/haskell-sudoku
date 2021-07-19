@@ -21,7 +21,7 @@ import SolverDefinitions
 
 perHouseSolver :: Puzzle -> (Puzzle -> (Cell -> Bool) -> [Transformer]) -> Puzzle
 perHouseSolver puz houseTransformer = applyRemovers puz removers
-    where removers = concatMap (houseTransformer puz) houseSelectors
+    where removers = concatMap (houseTransformer puz) (unsolvedHouses puz)
 
 -- Singles, only possibility solver:
 
