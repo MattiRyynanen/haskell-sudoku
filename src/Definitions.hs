@@ -136,6 +136,9 @@ housesOk puzzle = all isValid houseSelectors
 hasZeroCandidates :: [Cell] -> Bool
 hasZeroCandidates = any (null . candidates)
 
+updateCells :: Puzzle -> [Cell] -> Puzzle
+updateCells puz cells = puz { pcells = cells }
+
 loadPuzzle :: String -> Maybe Puzzle
 loadPuzzle str
     | length (pcells puzzle) == 81 && housesOk puzzle = Just puzzle
