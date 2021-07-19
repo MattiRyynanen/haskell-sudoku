@@ -37,13 +37,13 @@ solve steps
     | null steps = error "Nothing to solve."
     | not $ housesOk latest = addIdleStep InvalidSolution
     | hasZeroCandidates (pcells latest) = addIdleStep InvalidSolution
-    | all isSolved (pcells latest) = addIdleStep Solved
+    | isPuzzleSolved latest = addIdleStep Solved
     | isJust simplestSolver = solve $ prepend $ stepFor simplestSolver
     | otherwise = addIdleStep NoSolution
     where latest = getPuzzle $ head steps -- the latest puzzle
           simplestSolver = find (\s -> transformer s latest /= latest) solvers
           prepend s = s : steps
-          stepFor solv = let s = fromJust solv in SolverStep (transformer s latest) latest s
+          stepFor solv = let s = fromJust solv in SolverStep (updateUnsolvedHouses $ transformer s latest) latest s
           addIdleStep stepId = prepend $ IdleStep latest stepId
 
 -- Remove candidates based on already solved cells.
@@ -59,6 +59,14 @@ broadcastSolved puz cell
     where final = head $ candidates cell
           isApplicable c = isUnsolved c && hasCand final c && intersects c cell
           bs = applyWhen isApplicable (removeCellCandidate final) (pcells puz)
+
+updateUnsolvedHouses :: Puzzle -> Puzzle
+updateUnsolvedHouses puz = updatedBlocks
+    where updatedRows = puz { unsolvedRows = filter (isHouseUnsolved . get puz rowOf) (unsolvedRows puz) }
+          updatedCols = updatedRows { unsolvedCols = filter (isHouseUnsolved . get updatedRows colOf) (unsolvedCols updatedRows) }
+          updatedBlocks = updatedCols { unsolvedBlocks = filter (isHouseUnsolved . get updatedCols blockOf) (unsolvedBlocks updatedCols)}
+          isHouseUnsolved cells = not $ all isSolved cells
+          get p f i = filter ((==i) . f) (pcells p)
 
 -- Block omission, candidates within one block on one row or column, only.
 -- Can remove the possible candidates on that row or column on adjacent block.
@@ -184,7 +192,7 @@ xyCandsOk x y1 y2 = all threeUnique [[x, y1], [x, y2], [y1, y2], [x, y1, y2]]
     where threeUnique xs = (==3) $ length $ unique $ concatMap candidates xs
 
 xyCombinations :: [Cell] -> [[Cell]]
-xyCombinations xs = [[x, y1, y2] 
+xyCombinations xs = [[x, y1, y2]
     | x <- xs
     , (y1, i) <- xsi
     , (y2, j) <- xsi

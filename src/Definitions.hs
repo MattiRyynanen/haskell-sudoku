@@ -138,6 +138,9 @@ hasZeroCandidates = any (null . candidates)
 updateCells :: Puzzle -> [Cell] -> Puzzle
 updateCells puz cells = puz { pcells = cells }
 
+isPuzzleSolved :: Puzzle -> Bool
+isPuzzleSolved puz = all (null . ($puz)) [unsolvedRows, unsolvedCols, unsolvedBlocks]
+
 loadPuzzle :: String -> Maybe Puzzle
 loadPuzzle str
     | length (pcells puzzle) == 81 && housesOk puzzle = Just puzzle
