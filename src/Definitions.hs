@@ -12,7 +12,8 @@ data Cell = Cell {
     colOf :: Index,
     blockOf :: Index,
     candidates :: [Candidate],
-    broadcasted :: Bool -- if the final set value has been broadcasted to intersecting cells
+    broadcasted :: Bool, -- if the final set value has been broadcasted to intersecting cells
+    isSolved :: Bool
     } deriving (Eq)
 
 instance Show Cell where show c = concat [show $ rowOf c, show $ colOf c, ":", concatMap show $ candidates c]
@@ -25,7 +26,7 @@ type Puzzle = [Cell]
 00:123
 -}
 createCell :: Index -> [Candidate] -> Cell
-createCell i cands = Cell { index = i, rowOf = rowAt i, colOf = colAt i, blockOf = blockAt i, candidates = cands, broadcasted = False }
+createCell i cands = Cell { index = i, rowOf = rowAt i, colOf = colAt i, blockOf = blockAt i, candidates = cands, broadcasted = False, isSolved = hasOne cands }
 
 {- Creates sudoku cells with candidates and increasing position index.
 
@@ -75,9 +76,6 @@ houseSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
 uniqueCandidates :: [Cell] -> [Candidate]
 uniqueCandidates = unique . concatMap candidates
 
-isSolved :: Cell -> Bool
-isSolved = hasOne . candidates
-
 isUnsolved :: Cell -> Bool
 isUnsolved = not . isSolved
 
@@ -85,19 +83,19 @@ hasPair :: Cell -> Bool
 hasPair = hasTwo . candidates
 
 removeCellCandidate :: Candidate -> Cell -> Cell
-removeCellCandidate cand cell = cell { candidates = filter (/= cand) (candidates cell) }
+removeCellCandidate cand cell = setCellCandidates (filter (/= cand) (candidates cell)) cell
 
 removeCellCandidates :: [Candidate] -> Cell -> Cell
-removeCellCandidates cands cell = cell { candidates = filter (`notElem` cands) (candidates cell) }
-
-setCellCandidate :: Candidate -> Cell -> Cell
-setCellCandidate cand cell = cell { candidates = [cand] }
-
-setCellCandidates :: [Candidate] -> Cell -> Cell
-setCellCandidates cands cell = cell { candidates = cands }
+removeCellCandidates cands cell = setCellCandidates (filter (`notElem` cands) (candidates cell)) cell
 
 keepOnlyCandidates :: [Candidate] -> Cell -> Cell
-keepOnlyCandidates cands cell = cell { candidates = filter (`elem` cands) (candidates cell) }
+keepOnlyCandidates cands cell = setCellCandidates (filter (`elem` cands) (candidates cell)) cell
+
+setCellCandidate :: Candidate -> Cell -> Cell
+setCellCandidate cand cell = cell { candidates = [cand], isSolved = True }
+
+setCellCandidates :: [Candidate] -> Cell -> Cell
+setCellCandidates cands cell = cell { candidates = cands, isSolved = hasOne cands }
 
 setBroadcasted :: Cell -> Cell
 setBroadcasted cell = cell { broadcasted = True }
