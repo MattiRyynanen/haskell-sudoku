@@ -13,8 +13,9 @@ import Snippets
 import SolverDefinitions
 
 showSolution :: Int -> SolutionStep -> String
-showSolution minLevel (SolverStep res prev solv) = concat [show solv, " Unsolved cells = ", unsolved, puzzleStr]
+showSolution minLevel (SolverStep res prev solv) = concat [show solv, " Unsolved cells = ", unsolved, " Unsolved houses = ", unsolvedHouseCount, puzzleStr]
     where unsolved = show $ length $ filter isUnsolved (pcells res)
+          unsolvedHouseCount = show $ length $ unsolvedHouses res
           puzzleStr = if level solv <= minLevel then "" else '\n' : showPuzzleChange res prev ++ "\n"
 
 showSolution _ (IdleStep puz stepId) = concat ["Step: ", show stepId, "\n", colorPz]
