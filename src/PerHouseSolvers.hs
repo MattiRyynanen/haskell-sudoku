@@ -20,7 +20,9 @@ import Definitions
 import SolverDefinitions
 
 perHouseSolver :: Puzzle -> (Puzzle -> (Cell -> Bool) -> [Transformer]) -> Puzzle
-perHouseSolver puz houseTransformer = applyRemovers puz removers
+perHouseSolver puz houseTransformer
+    | null removers = puz
+    | otherwise = applyRemovers puz removers
     where removers = concatMap (houseTransformer puz) houseSelectors
 
 -- Singles, only possibility solver:
