@@ -17,7 +17,7 @@ data Cell = Cell {
 
 instance Show Cell where show c = concat [show $ rowOf c, show $ colOf c, ":", concatMap show $ candidates c]
 
-type Puzzle = [Cell]
+data Puzzle = Puzzle { pcells :: [Cell], unsolvedRows :: [Index], unsolvedCols :: [Index], unsolvedBlocks :: [Index] } deriving (Show)
 
 {- Creates a sudoku cell with given position index and candidates.
 
@@ -35,13 +35,16 @@ createCell i cands = Cell { index = i, rowOf = rowAt i, colOf = colAt i, blockOf
 createCells :: [[Candidate]] -> [Cell]
 createCells = zipWith createCell [0 ..]
 
-{- Creates an empty 9x9 Sudoku puzzle cells.
+{- | Creates an empty 9x9 Sudoku puzzle cells.
 
->>> length createEmptyPuzzle
+>>> length $ pcells createEmptyPuzzle
 81
 -}
 createEmptyPuzzle :: Puzzle
-createEmptyPuzzle = createCells $ replicate (9 * 9) [1 .. 9]
+createEmptyPuzzle = createPuzzleWithCells (createCells $ replicate (9 * 9) [1 .. 9])
+
+createPuzzleWithCells :: [Cell] -> Puzzle
+createPuzzleWithCells cells = Puzzle { pcells = cells, unsolvedRows = [0..8], unsolvedCols = [0..8], unsolvedBlocks = [0..8] }
 
 {-| Returns True if cells have the same index.
 
@@ -126,17 +129,17 @@ joint f cells
 
 housesOk :: Puzzle -> Bool
 housesOk puzzle = all isValid houseSelectors
-    where solved = filter isSolved puzzle
+    where solved = filter isSolved $ pcells puzzle
           isValid house = let b = take 9 $ filter house solved in (length b == uniqueCands b)
           uniqueCands = length . unique . map candidates
 
-hasZeroCandidates :: Puzzle -> Bool
+hasZeroCandidates :: [Cell] -> Bool
 hasZeroCandidates = any (null . candidates)
 
 loadPuzzle :: String -> Maybe Puzzle
 loadPuzzle str
-    | length puzzle == 81 && housesOk puzzle = Just puzzle
+    | length (pcells puzzle) == 81 && housesOk puzzle = Just puzzle
     | otherwise = Nothing
     where createCellWith i n = createCell i (createCandidatesFrom n)
-          createCandidatesFrom s = if s == '.' then [1..9] else [digitToInt s]
-          puzzle = zipWith createCellWith [0..] (filter (`elem` "123456789.") str)
+          createCandidatesFrom s = if s == '.' then [1 .. 9] else [digitToInt s]
+          puzzle = createPuzzleWithCells $ zipWith createCellWith [0 ..] (filter (`elem` "123456789.") str) :: Puzzle
