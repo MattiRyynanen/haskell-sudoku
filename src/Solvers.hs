@@ -49,13 +49,13 @@ solve steps
 -- Remove candidates based on already solved cells.
 
 removeSolved :: Transformer
-removeSolved puz = foldl broadcastSolved puz puz
+removeSolved puz = foldl broadcastSolved puz (pcells puz)
 
 broadcastSolved :: Puzzle -> Cell -> Puzzle
 broadcastSolved puz cell
     | broadcasted cell = puz -- already done
     | isUnsolved cell = puz -- nothing to broadcast
-    | otherwise = updateAt (index cell) setBroadcasted bs
+    | otherwise = updateCells puz $ updateAt (index cell) setBroadcasted bs
     where final = head $ candidates cell
           isApplicable c = isUnsolved c && hasCand final c && intersects c cell
           bs = applyWhen isApplicable (removeCellCandidate final) (pcells puz)
@@ -69,7 +69,7 @@ solveBlockOmissions puz = applyRemovers puz (rowRemovers ++ colRemovers)
           colRemovers = concatMap (searchBlockOmissionBy colOf puz) [0..8]
 
 searchBlockOmissionBy :: (Cell -> Index) -> Puzzle -> Index -> [Transformer]
-searchBlockOmissionBy indexer puz blockIndex = removers
+searchBlockOmissionBy indexer puz blockIndex = map wrapAsTransformer removers
     where unsolved = filterWith [(==blockIndex) . blockOf, isUnsolved] (pcells puz)
           cands = uniqueCandidates unsolved
           check cand = joint indexer (withCandidate cand unsolved)
@@ -85,7 +85,7 @@ solveOmitCandidateInOneBlock puz = applyRemovers puz removers
           selectors f = map (\i -> (==i) . f) [0..8]
 
 searchOmitCandidateInOneBlock :: Puzzle -> (Cell -> Bool) -> [Transformer]
-searchOmitCandidateInOneBlock puz p = removers
+searchOmitCandidateInOneBlock puz p = map wrapAsTransformer removers
     where unsolved = filterWith [p, isUnsolved] (pcells puz)
           cands = uniqueCandidates unsolved
           check cand = joint blockOf (withCandidate cand unsolved)
@@ -101,7 +101,7 @@ solveXwing puz = applyRemovers puz removers
 searchXwing :: Puzzle -> String -> Candidate -> [Transformer]
 searchXwing puz selId cand
     | length unsolved <= 4 = []
-    | otherwise = map removerFor (concatMap removalCells validCombs)
+    | otherwise = map (wrapAsTransformer . removerFor) (concatMap removalCells validCombs)
     where unsolved = filterWith [hasCand cand, isUnsolved] (pcells puz)
           ops = if selId == "rows" then (rowOf, colOf) else (colOf, rowOf)
           selector i = map (snd ops) $ filter ((==i) . fst ops) unsolved
@@ -132,7 +132,7 @@ solveUniqueRectangle :: Transformer
 solveUniqueRectangle puz = applyRemovers puz (searchUniqueRect puz)
 
 searchUniqueRect :: Puzzle -> [Transformer]
-searchUniqueRect puz = map removerFor $ filter validComb combs
+searchUniqueRect puz = map (wrapAsTransformer . removerFor) $ filter validComb combs
     where pairs = filter hasPair (pcells puz)
           combs = tripletCombinations pairs
           ops = [rowOf, colOf]
@@ -161,7 +161,7 @@ singleFromTriplet _ = error "Works only for lists of length 3."
 -- the candidates in y1 and y2 not shared in x are the same
 
 solveXyWing :: Transformer
-solveXyWing puz = applyRemovers puz removers
+solveXyWing puz = applyRemovers puz $ map wrapAsTransformer removers
     where removers = map removerFor $ searchXyWing puz
           removerFor comb = applyWhen (xyRemovalPos comb) (removeCellCandidate $ xyRemovalCand comb)
 
@@ -205,6 +205,6 @@ pairContradictionSolver puz
     where pairCells = take 1 $ filter hasPair (pcells puz)
           pairCell = head pairCells
           cands = candidates pairCell
-          solveWith cand = applyWhen (samePosWith pairCell) (setCellCandidate cand)
+          solveWith cand = wrapAsTransformer $ applyWhen (samePosWith pairCell) (setCellCandidate cand)
           p1 = solveWith (head cands) puz
           p2 = solveWith (last cands) puz

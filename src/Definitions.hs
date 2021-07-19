@@ -17,7 +17,7 @@ data Cell = Cell {
 
 instance Show Cell where show c = concat [show $ rowOf c, show $ colOf c, ":", concatMap show $ candidates c]
 
-data Puzzle = Puzzle { pcells :: [Cell], unsolvedRows :: [Index], unsolvedCols :: [Index], unsolvedBlocks :: [Index] } deriving (Show)
+data Puzzle = Puzzle { pcells :: [Cell], unsolvedRows :: [Index], unsolvedCols :: [Index], unsolvedBlocks :: [Index] } deriving (Show, Eq)
 
 {- Creates a sudoku cell with given position index and candidates.
 

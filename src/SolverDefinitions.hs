@@ -1,6 +1,6 @@
 module SolverDefinitions where
 
-import Definitions ( Puzzle )
+import Definitions ( Puzzle(pcells), Cell, updateCells )
 
 type Transformer = Puzzle -> Puzzle
 
@@ -39,3 +39,7 @@ applyRemover puz remover = remover puz
 
 applyRemovers :: Puzzle -> [Transformer] -> Puzzle
 applyRemovers = foldl applyRemover
+
+wrapAsTransformer :: ([Cell] -> [Cell]) -> Transformer
+wrapAsTransformer remover = wrap
+    where wrap p = updateCells p $ remover (pcells p)
