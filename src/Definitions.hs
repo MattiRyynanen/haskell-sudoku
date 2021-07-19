@@ -122,9 +122,9 @@ joint f cells
     | otherwise = Nothing
     where indx = map f cells
 
-housesOk :: Puzzle -> Bool
-housesOk puzzle = all isValid houseSelectors
-    where solved = filter isSolved puzzle
+housesOk :: Puzzle -> [Cell -> Bool] -> Bool
+housesOk puz = all isValid
+    where solved = filter isSolved puz
           isValid house = let b = take 9 $ filter house solved in (length b == uniqueCands b)
           uniqueCands = length . unique . map candidates
 
@@ -133,7 +133,7 @@ hasZeroCandidates = any (null . candidates)
 
 loadPuzzle :: String -> Maybe Puzzle
 loadPuzzle str
-    | length puzzle == 81 && housesOk puzzle = Just puzzle
+    | length puzzle == 81 && housesOk puzzle houseSelectors = Just puzzle
     | otherwise = Nothing
     where createCellWith i n = createCell i (createCandidatesFrom n)
           createCandidatesFrom s = if s == '.' then [1..9] else [digitToInt s]

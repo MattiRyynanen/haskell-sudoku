@@ -35,7 +35,7 @@ finalResult = lastResult . beginSolve
 solve :: [SolutionStep] -> [SolutionStep]
 solve steps
     | null steps = error "Nothing to solve."
-    | not $ housesOk latest = addIdleStep InvalidSolution
+    | not $ housesOk latest changedHousesFromPrevious = addIdleStep InvalidSolution
     | hasZeroCandidates latest = addIdleStep InvalidSolution
     | all isSolved latest = addIdleStep Solved
     | isJust simplestSolver = solve $ prepend $ stepFor simplestSolver
@@ -43,8 +43,17 @@ solve steps
     where latest = getPuzzle $ head steps -- the latest puzzle
           simplestSolver = find (\s -> transformer s latest /= latest) solvers
           prepend s = s : steps
+          precedingPuzzle = getPuzzle $ if length steps > 1 then steps !! 1 else head steps
+          changedHousesFromPrevious = housesOf (changedCells latest precedingPuzzle)
           stepFor solv = let s = fromJust solv in SolverStep (transformer s latest) latest s
           addIdleStep stepId = prepend $ IdleStep latest stepId
+
+changedCells :: Puzzle -> Puzzle -> [Cell]
+changedCells cur pre = [c | (c, p) <- zip cur pre, c /= p]
+
+housesOf :: [Cell] -> [Cell -> Bool]
+housesOf cells = concatMap houseSel [rowOf, colOf, blockOf]
+    where houseSel f = [(==i) . f | i <- unique $ map f cells]
 
 -- Remove candidates based on already solved cells.
 
