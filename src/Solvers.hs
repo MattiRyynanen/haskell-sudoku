@@ -147,10 +147,12 @@ solveUniqueRectangle puz = map removerFor $ filter validComb combs
           maxTwoBlock = (<3) . length . unique . map blockOf
           get f = singleFromTriplet . map f
           rectanglePos comb = all (isJust . ($comb) . get) ops
-          validComb comb = rectanglePos comb &&allSame (map candidates comb) && maxTwoBlock comb
-          removerFor comb = applyWhen ((== pos comb) . cellPos) (removeCellCandidates (candidates $ head comb))
-              where pos combination = map (fromJust . ($combination) . get) ops
-                    cellPos cell = map ($cell) ops
+          validComb comb = rectanglePos comb && allSame (map candidates comb) && maxTwoBlock comb && hasRemoval comb
+          posFor comb = map (fromJust . ($comb) . get) ops
+          cellPos cell = map ($cell) ops
+          hasRemoval comb = hasAnyCand (candidates $ head comb) (head $ filter ((== posFor comb) . cellPos) puz)
+          removerFor comb = applyWhen ((== posFor comb) . cellPos) (removeCellCandidates (candidates $ head comb))
+
 
 singleFromTriplet :: Eq p => [p] -> Maybe p
 singleFromTriplet [a, b, c]
