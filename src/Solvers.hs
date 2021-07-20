@@ -171,8 +171,9 @@ singleFromTriplet _ = error "Works only for lists of length 3."
 -- the candidates in y1 and y2 not shared in x are the same
 
 solveXyWing :: Puzzle -> [Transformer]
-solveXyWing puz = map removerFor $ searchXyWing puz
+solveXyWing puz = map removerFor $ filter isValid (searchXyWing puz)
     where removerFor comb = applyWhen (xyRemovalPos comb) (removeCellCandidate $ xyRemovalCand comb)
+          isValid comb = hasCand (xyRemovalCand comb) (head $ filter (xyRemovalPos comb) puz)
 
 xyRemovalPos :: [Cell] -> Cell -> Bool
 xyRemovalPos comb cell = all (intersectsEx cell) (drop 1 comb)
