@@ -109,10 +109,10 @@ searchNakedTriplets puz p
     | otherwise = map removerFor validCombs
     where unsolved = filterWith [p, isUnsolved] puz
           combinations = tripletCombinations unsolved
-          hasThreeCandidates comb = (==3) $ length $ candidatesIn comb
-          candidatesIn comb = unique $ concatMap candidates comb
+          hasThreeCandidates = (==3) . length . candidatesIn
+          candidatesIn = unique . concatMap candidates
           validCombs = filter hasThreeCandidates combinations
-          indicesFor comb = map index comb
+          indicesFor = map index
           removerFor comb = applyWhen (\c -> p c && index c `notElem` indicesFor comb) (removeCellCandidates (candidatesIn comb))
 
 solveHiddenTriplet :: Transformer
@@ -127,8 +127,7 @@ searchHiddenTriplet puz p
           positionsFor cand = map index $ filter (hasCand cand) unsolved
           tripletPosCands = [(positionsFor cand, cand) | cand <- unique_cands, (<=3) $ length $ positionsFor cand]
           combs = tripletCombinations tripletPosCands
-          combIndx comb = unique $ concatMap fst comb
-          validCombs = filter ((==3) . length . combIndx) combs
-          indicesFor comb = unique $ concatMap fst comb
-          candidatesIn comb = unique $ map snd comb
+          indicesFor = unique . concatMap fst
+          validCombs = filter ((==3) . length . indicesFor) combs
+          candidatesIn = unique . map snd
           removerFor comb = applyWhen (\c -> p c && index c `elem` indicesFor comb) (keepOnlyCandidates (candidatesIn comb))

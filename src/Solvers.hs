@@ -117,7 +117,7 @@ searchXwing puz rowCol cand
           ops = if rowCol == Row then (rowOf, colOf) else (colOf, rowOf)
           selector i = map (snd ops) $ filter ((==i) . fst ops) unsolved
           twoPos f = [(i, f i) | i <- [0..8], hasTwo $ f i]
-          validComb comb = allSame $ map snd comb
+          validComb = allSame . map snd
           validCombs = map (\comb -> (map fst comb, head $ map snd comb)) $ filter validComb (pairCombinations $ twoPos selector)
           removalCells comb = filter (\c -> snd ops c `elem` snd comb && fst ops c `notElem` fst comb && hasCand cand c) unsolved
           removerFor cell = applyWhen (samePosWith cell) (removeCellCandidate cand)
@@ -148,7 +148,7 @@ searchUniqueRect puz = map removerFor $ filter validComb combs
           maxTwoBlock = (<3) . length . unique . map blockOf
           get f = singleFromTriplet . map f
           rectanglePos comb = all (isJust . ($comb) . get) ops
-          validComb comb = rectanglePos comb &&allSame (map candidates comb) && maxTwoBlock comb
+          validComb comb = rectanglePos comb && allSame (map candidates comb) && maxTwoBlock comb
           removerFor comb = applyWhen ((== pos comb) . cellPos) (removeCellCandidates (candidates $ head comb))
               where pos combination = map (fromJust . ($combination) . get) ops
                     cellPos cell = map ($cell) ops
