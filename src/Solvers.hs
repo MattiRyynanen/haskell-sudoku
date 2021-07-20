@@ -102,8 +102,9 @@ searchOmitCandidateInOneBlock puz p = removers
     where unsolved = filterWith [p, isUnsolved] puz
           cands = uniqueCandidates unsolved
           check cand = joint blockOf (withCandidate cand unsolved)
+          hasRemoval blockInd cand = any (\c -> not (p c) && blockOf c == blockInd && hasCand cand c) puz
           removerFor blockInd cand = applyWhen (\c -> not (p c) && blockOf c == blockInd) (removeCellCandidate cand)
-          removers = [removerFor (fromJust $ check c) c | c <- cands, isJust $ check c]
+          removers = [removerFor (fromJust $ check c) c | c <- cands, isJust $ check c, hasRemoval (fromJust $ check c) c]
 
 data RowCol = Row | Col deriving (Eq)
 
