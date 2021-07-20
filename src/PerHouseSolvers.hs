@@ -128,8 +128,8 @@ searchHiddenTriplet puz p
           positionsFor cand = map index $ filter (hasCand cand) unsolved
           tripletPosCands = [(positionsFor cand, cand) | cand <- unique_cands, (<=3) $ length $ positionsFor cand]
           combs = tripletCombinations tripletPosCands
-          combIndx comb = unique $ concatMap fst comb
-          validCombs = filter ((==3) . length . combIndx) combs
-          indicesFor comb = unique $ concatMap fst comb
-          candidatesIn comb = unique $ map snd comb
+          validCombs = filter hasRemovals $ filter ((==3) . length . indicesFor) combs
+          indicesFor = unique . concatMap fst
+          candidatesIn = unique . map snd
+          hasRemovals comb = any (\c -> index c `elem` indicesFor comb && any (\ca -> ca `notElem` candidatesIn comb) (candidates c)) unsolved
           removerFor comb = applyWhen (\c -> p c && index c `elem` indicesFor comb) (keepOnlyCandidates (candidatesIn comb))
