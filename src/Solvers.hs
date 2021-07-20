@@ -83,7 +83,7 @@ searchBlockOmissionBy indexer puz blockIndex = removers
           cands = uniqueCandidates unsolved
           check cand = joint indexer (withCandidate cand unsolved)
           removerFor ind cand = applyWhen (\c -> indexer c == ind && blockOf c /= blockIndex) (removeCellCandidate cand)
-          removers = [removerFor (fromJust $ check c) c | c <- cands, isJust $ check c]
+          removers = map (\p -> removerFor (fromJust $ snd p) (fst p)) $ filter (isJust . snd) $ map (\c -> (c, check c)) cands
 
 -- Block omission: row or column has a candidate only within one block, any other
 -- candidate in that block can be removed.
@@ -99,7 +99,7 @@ searchOmitCandidateInOneBlock puz p = removers
           cands = uniqueCandidates unsolved
           check cand = joint blockOf (withCandidate cand unsolved)
           removerFor blockInd cand = applyWhen (\c -> not (p c) && blockOf c == blockInd) (removeCellCandidate cand)
-          removers = [removerFor (fromJust $ check c) c | c <- cands, isJust $ check c]
+          removers = map (\pa -> removerFor (fromJust $ snd pa) (fst pa)) $ filter (isJust . snd) $ map (\c -> (c, check c)) cands
 
 data RowCol = Row | Col deriving (Eq)
 
