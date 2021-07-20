@@ -101,18 +101,20 @@ searchOmitCandidateInOneBlock puz p = removers
           removerFor blockInd cand = applyWhen (\c -> not (p c) && blockOf c == blockInd) (removeCellCandidate cand)
           removers = [removerFor (fromJust $ check c) c | c <- cands, isJust $ check c]
 
+data RowCol = Row | Col deriving (Eq)
+
 -- X-Wing.
 
 solveXwing :: Transformer
 solveXwing puz = applyRemovers puz removers
-    where removers = concat [searchXwing puz sel cand | cand <- [1..9], sel <- ["rows", "cols"]]
+    where removers = concat [searchXwing puz sel cand | cand <- [1..9], sel <- [Row, Col]]
 
-searchXwing :: Puzzle -> String -> Candidate -> [Transformer]
-searchXwing puz selId cand
+searchXwing :: Puzzle -> RowCol -> Candidate -> [Transformer]
+searchXwing puz rowCol cand
     | length unsolved <= 4 = []
     | otherwise = map removerFor (concatMap removalCells validCombs)
     where unsolved = filterWith [hasCand cand, isUnsolved] puz
-          ops = if selId == "rows" then (rowOf, colOf) else (colOf, rowOf)
+          ops = if rowCol == Row then (rowOf, colOf) else (colOf, rowOf)
           selector i = map (snd ops) $ filter ((==i) . fst ops) unsolved
           twoPos f = [(i, f i) | i <- [0..8], hasTwo $ f i]
           validComb comb = allSame $ map snd comb
@@ -121,8 +123,6 @@ searchXwing puz selId cand
           removerFor cell = applyWhen (samePosWith cell) (removeCellCandidate cand)
 
 -- Swordfish (X-Wing on three columns or rows)
-
-data RowCol = Row | Col deriving (Eq)
 
 --searchSwordfish :: Puzzle -> RowCol -> Candidate -> [Transformer]
 searchSwordfish :: [Cell] -> RowCol -> Int -> [[[Cell]]]
