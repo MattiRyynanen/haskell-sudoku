@@ -12,7 +12,7 @@ data SolverId = RemoveBySolved | Singles
     | UniqueRectangle
     | PairContradiction deriving (Eq, Show)
 
-data Solver = Solver { transformer :: Transformer, identifier :: SolverId, level :: Int }
+data Solver = Solver { transformers :: Puzzle -> [Transformer], identifier :: SolverId, level :: Int }
 instance Show Solver where show s = concat [show $ level s, ": ", show $ identifier s]
 
 data IdleStepId = Initial | Solved | NoSolution | InvalidSolution deriving (Eq, Ord, Show)

@@ -19,15 +19,12 @@ import Snippets
 import Definitions
 import SolverDefinitions
 
-perHouseSolver :: Puzzle -> (Puzzle -> (Cell -> Bool) -> [Transformer]) -> Puzzle
-perHouseSolver puz houseTransformer
-    | null removers = puz
-    | otherwise = applyRemovers puz removers
-    where removers = concatMap (houseTransformer puz) houseSelectors
+perHouseSolver :: Puzzle -> (Puzzle -> (Cell -> Bool) -> [Transformer]) -> [Transformer]
+perHouseSolver puz houseTransformer = concatMap (houseTransformer puz) houseSelectors
 
 -- Singles, only possibility solver:
 
-solveSingles :: Transformer
+solveSingles :: Puzzle -> [Transformer]
 solveSingles puz = perHouseSolver puz searchSingles
 
 searchSingles :: Puzzle -> (Cell -> Bool) -> [Transformer]
@@ -46,7 +43,7 @@ findSingles = Map.keys . Map.filter (==1) . countOccurrences
 -- If row, column, or block contains two pairs with exactly same candidates,
 -- the numbers in elsewhere within the house can be removed.
 
-solveNakedPairs :: Transformer
+solveNakedPairs :: Puzzle -> [Transformer]
 solveNakedPairs puz = perHouseSolver puz searchNakedPair
 
 searchNakedPair :: Puzzle -> (Cell -> Bool) -> [Transformer]
@@ -66,7 +63,7 @@ findNakedPairs = Map.keys . Map.filter (==2) . countOccurrences
 
 -- Hidden pairs: two candidates in a house appear only in the same two locations.
 
-solveHiddenPairs :: Transformer
+solveHiddenPairs :: Puzzle -> [Transformer]
 solveHiddenPairs puz = perHouseSolver puz searchHiddenPairs
 
 searchHiddenPairs :: Puzzle -> (Cell -> Bool) -> [Transformer]
@@ -100,7 +97,7 @@ candidatePosMap = foldl addCell IntMap.empty
 
 -- Naked triplets.
 
-solveNakedTriplets :: Transformer
+solveNakedTriplets :: Puzzle -> [Transformer]
 solveNakedTriplets puz = perHouseSolver puz searchNakedTriplets
 
 searchNakedTriplets :: Puzzle -> (Cell -> Bool) -> [Transformer]
@@ -115,7 +112,7 @@ searchNakedTriplets puz p
           indicesFor comb = map index comb
           removerFor comb = applyWhen (\c -> p c && index c `notElem` indicesFor comb) (removeCellCandidates (candidatesIn comb))
 
-solveHiddenTriplet :: Transformer
+solveHiddenTriplet :: Puzzle -> [Transformer]
 solveHiddenTriplet puz = perHouseSolver puz searchHiddenTriplet
 
 searchHiddenTriplet :: Puzzle -> (Cell -> Bool) -> [Transformer]

@@ -10,7 +10,7 @@ import PerHouseSolvers
 
 solvers :: [Solver]
 solvers = let s = Solver in [
-    s (applyWhileReduced removeSolved) RemoveBySolved 0,
+    s removeSolved RemoveBySolved 0,
     s solveSingles Singles 0,
     s solveBlockOmissions BlockOmission 1,
     s solveOmitCandidateInOneBlock OmitCandidateInOneBlock 1,
@@ -38,14 +38,16 @@ solve steps
     | not $ housesOk latest changedHousesFromPrevious = addIdleStep InvalidSolution
     | hasZeroCandidates latest = addIdleStep InvalidSolution
     | all isSolved latest = addIdleStep Solved
-    | isJust simplestSolver = solve $ prepend $ fromJust simplestSolver
+    | isJust simplestSolver = solve $ prepend $ stepFor b
     | otherwise = addIdleStep NoSolution
     where latest = getPuzzle $ head steps -- the latest puzzle
-          simplestSolver = find (\s -> result s /= previous s) $ map stepFor solvers
+          simplestSolver = find (not . null . snd) $ map transFor solvers
           prepend s = s : steps
+          b = fromJust simplestSolver
           precedingPuzzle = getPuzzle $ if length steps > 1 then steps !! 1 else head steps
           changedHousesFromPrevious = housesOf (changedCells latest precedingPuzzle)
-          stepFor solv = SolverStep (transformer solv latest) latest solv
+          transFor solv = (solv, transformers solv latest)
+          stepFor solv_trs = SolverStep (applyRemovers latest (snd solv_trs)) latest (fst solv_trs)
           addIdleStep stepId = prepend $ IdleStep latest stepId
 
 changedCells :: Puzzle -> Puzzle -> [Cell]
@@ -57,23 +59,24 @@ housesOf cells = concatMap houseSel [rowOf, colOf, blockOf]
 
 -- Remove candidates based on already solved cells.
 
-removeSolved :: Transformer
-removeSolved puz = foldl broadcastSolved puz puz
+removeSolved :: Puzzle -> [Transformer]
+removeSolved = concatMap broadcastSolved
 
-broadcastSolved :: Puzzle -> Cell -> Puzzle
-broadcastSolved puz cell
-    | broadcasted cell = puz -- already done
-    | isUnsolved cell = puz -- nothing to broadcast
-    | otherwise = updateAt (index cell) setBroadcasted bs
+broadcastSolved :: Cell -> [Transformer]
+broadcastSolved cell
+    | broadcasted cell = [] -- already done
+    | isUnsolved cell = [] -- nothing to broadcast
+    | otherwise = [remover, broadcastFlagSetter]
     where final = head $ candidates cell
           isApplicable c = isUnsolved c && hasCand final c && intersects cell c
-          bs = applyWhen isApplicable (removeCellCandidate final) puz
+          remover = applyWhen isApplicable (removeCellCandidate final)
+          broadcastFlagSetter = updateAt (index cell) setBroadcasted
 
 -- Block omission, candidates within one block on one row or column, only.
 -- Can remove the possible candidates on that row or column on adjacent block.
 
-solveBlockOmissions :: Transformer
-solveBlockOmissions puz = applyRemovers puz (rowRemovers ++ colRemovers)
+solveBlockOmissions :: Puzzle -> [Transformer]
+solveBlockOmissions puz = rowRemovers ++ colRemovers
     where rowRemovers = concatMap (searchBlockOmissionBy rowOf puz) [0..8]
           colRemovers = concatMap (searchBlockOmissionBy colOf puz) [0..8]
 
@@ -88,8 +91,8 @@ searchBlockOmissionBy indexer puz blockIndex = removers
 -- Block omission: row or column has a candidate only within one block, any other
 -- candidate in that block can be removed.
 
-solveOmitCandidateInOneBlock :: Transformer
-solveOmitCandidateInOneBlock puz = applyRemovers puz removers
+solveOmitCandidateInOneBlock :: Puzzle -> [Transformer]
+solveOmitCandidateInOneBlock puz = removers
     where removers = concatMap (searchOmitCandidateInOneBlock puz) (concatMap selectors [rowOf, colOf])
           selectors f = map (\i -> (==i) . f) [0..8]
 
@@ -105,9 +108,8 @@ data RowCol = Row | Col deriving (Eq)
 
 -- X-Wing.
 
-solveXwing :: Transformer
-solveXwing puz = applyRemovers puz removers
-    where removers = concat [searchXwing puz sel cand | cand <- [1..9], sel <- [Row, Col]]
+solveXwing :: Puzzle -> [Transformer]
+solveXwing puz = concat [searchXwing puz sel cand | cand <- [1..9], sel <- [Row, Col]]
 
 searchXwing :: Puzzle -> RowCol -> Candidate -> [Transformer]
 searchXwing puz rowCol cand
@@ -137,11 +139,8 @@ searchSwordfish puz rowCol cand = validCombs
 
 -- Unique rectangle.
 
-solveUniqueRectangle :: Transformer
-solveUniqueRectangle puz = applyRemovers puz (searchUniqueRect puz)
-
-searchUniqueRect :: Puzzle -> [Transformer]
-searchUniqueRect puz = map removerFor $ filter validComb combs
+solveUniqueRectangle :: Puzzle -> [Transformer]
+solveUniqueRectangle puz = map removerFor $ filter validComb combs
     where pairs = filter hasPair puz
           combs = tripletCombinations pairs
           ops = [rowOf, colOf]
@@ -169,10 +168,9 @@ singleFromTriplet _ = error "Works only for lists of length 3."
 -- one of candidates in x is in y1 and the other in y2
 -- the candidates in y1 and y2 not shared in x are the same
 
-solveXyWing :: Transformer
-solveXyWing puz = applyRemovers puz removers
-    where removers = map removerFor $ searchXyWing puz
-          removerFor comb = applyWhen (xyRemovalPos comb) (removeCellCandidate $ xyRemovalCand comb)
+solveXyWing :: Puzzle -> [Transformer]
+solveXyWing puz = map removerFor $ searchXyWing puz
+    where removerFor comb = applyWhen (xyRemovalPos comb) (removeCellCandidate $ xyRemovalCand comb)
 
 xyRemovalPos :: [Cell] -> Cell -> Bool
 xyRemovalPos comb cell = all (intersectsEx cell) (drop 1 comb)
@@ -207,13 +205,13 @@ xyCombinations xs = [[x, y1, y2]
 -- Pick a pair. Try to solve with a candidate, if
 -- there's a InvalidSolution, it must be the other one.
 
-pairContradictionSolver :: Transformer
+pairContradictionSolver :: Puzzle -> [Transformer]
 pairContradictionSolver puz
-    | null pairCells = puz
-    | otherwise = if finalResult p1 == Solved then p1 else p2
+    | null pairCells = []
+    | otherwise = if finalResult (p1 puz) == Solved then [p1] else [p2]
     where pairCells = take 1 $ filter hasPair puz
           pairCell = head pairCells
           cands = candidates pairCell
           solveWith cand = applyWhen (samePosWith pairCell) (setCellCandidate cand)
-          p1 = solveWith (head cands) puz
-          p2 = solveWith (last cands) puz
+          p1 = solveWith (head cands) :: Transformer
+          p2 = solveWith (last cands) :: Transformer
