@@ -30,9 +30,8 @@ getStepId (IdleStep _ stepId) = Just stepId
 getStepId SolverStep {} = Nothing
 
 applyWhileReduced :: Eq t => (t -> t) -> t -> t
-applyWhileReduced f puz =
-    let reduced = f puz
-    in if reduced == puz then puz else applyWhileReduced f reduced
+applyWhileReduced f puz = if reduced == puz then puz else applyWhileReduced f reduced
+    where reduced = f puz
 
 applyRemover :: Puzzle -> Transformer -> Puzzle
 applyRemover puz remover = remover puz

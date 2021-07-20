@@ -61,14 +61,12 @@ rowAt = (`div` 9)
 colAt :: Index -> Index
 colAt = (`rem` 9)
 
+{- |
+>>> map blockAt [0 .. 80]
+[0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,3,3,3,4,4,4,5,5,5,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8,6,6,6,7,7,7,8,8,8]
+-}
 blockAt :: Index -> Index
-blockAt ind = 3 * (rowAt ind `div` 3) + colAt ind `div` 3
-
-blockRowOf :: Cell -> Index
-blockRowOf = (`div` 3) . blockOf
-
-blockColOf :: Cell -> Index
-blockColOf = (`rem` 3) . blockOf
+blockAt ind = 3 * (ind `div` 27) + colAt ind `div` 3
 
 houseSelectors :: [Cell -> Bool]
 houseSelectors = [(==i) . f | f <- [rowOf, colOf, blockOf], i <- [0..8]]
@@ -125,7 +123,8 @@ joint f cells
 housesOk :: Puzzle -> [Cell -> Bool] -> Bool
 housesOk puz = all isValid
     where solved = filter isSolved puz
-          isValid house = let b = take 9 $ filter house solved in (length b == uniqueCands b)
+          isValid house = length b == uniqueCands b
+            where b = take 9 $ filter house solved
           uniqueCands = length . unique . map candidates
 
 hasZeroCandidates :: Puzzle -> Bool
