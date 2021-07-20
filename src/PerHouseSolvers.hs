@@ -39,8 +39,7 @@ searchSingles puz p
           removerFor cand = updateAt (indexToUpdate cand) (setCellCandidate cand)
 
 findSingles :: [Cell] -> [Candidate]
-findSingles = Map.keys . Map.filter (==1) . countOccurrences
-    . concatMap candidates
+findSingles = Map.keys . Map.filter (==1) . countOccurrences . concatMap candidates
 
 -- Solving Naked pair
 -- If row, column, or block contains two pairs with exactly same candidates,
@@ -83,10 +82,10 @@ where the candidates only appear.
 
 findHiddenPairs :: [Cell] -> [([Index], [Candidate])]
 findHiddenPairs cells = posCands
-    where candMap = candidatePosMap cells
-          uniquePositions = unique $ IntMap.elems $ IntMap.filter hasTwo candMap
+    where candMap = IntMap.filter hasTwo $ candidatePosMap cells
+          uniquePositions = unique $ IntMap.elems candMap
           candsWithPos pos = IntMap.keys $ IntMap.filter (== pos) candMap
-          posCands = [(pos, candsWithPos pos) | pos <- uniquePositions, hasTwo $ candsWithPos pos]
+          posCands = filter (hasTwo . snd) [(pos, candsWithPos pos) | pos <- uniquePositions]
 
 {- | Creates a map of candidates as keys and list of their positions as values.
 

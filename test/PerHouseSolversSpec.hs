@@ -10,7 +10,7 @@ spec :: Spec
 spec = do
     describe "PerHouseSolvers.findSingles" $ do
         it "returns candidates which occur once in (house) unsolved cells" $ do
-            findSingles (createCells [[1,2,3],[2,3,4],[5]]) `shouldBe` [1, 4]
+            findSingles (createCells [[1,2,3],[2,3,4],[5]]) `shouldBe` [1, 4, 5]
 
     describe "PerHouseSolvers.findNakedPairs" $ do
         it "returns pairs occurring twice" $ do
