@@ -31,14 +31,16 @@ solveSingles :: Transformer
 solveSingles puz = perHouseSolver puz searchSingles
 
 searchSingles :: Puzzle -> (Cell -> Bool) -> [Transformer]
-searchSingles puz p = map removerFor $ findSingles house
-    where house = take 9 $ filter p puz
-          indexToUpdate cand = index $ head $ filter (hasCand cand) house
+searchSingles puz p
+    | null unsolvedInHouse = []
+    | otherwise = map removerFor $ findSingles unsolvedInHouse
+    where unsolvedInHouse = filter isUnsolved $ take 9 $ filter p puz
+          indexToUpdate cand = index $ head $ filter (hasCand cand) unsolvedInHouse
           removerFor cand = updateAt (indexToUpdate cand) (setCellCandidate cand)
 
 findSingles :: [Cell] -> [Candidate]
 findSingles = Map.keys . Map.filter (==1) . countOccurrences
-    . concatMap candidates . filter isUnsolved
+    . concatMap candidates
 
 -- Solving Naked pair
 -- If row, column, or block contains two pairs with exactly same candidates,
