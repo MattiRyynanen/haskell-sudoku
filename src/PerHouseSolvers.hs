@@ -47,9 +47,11 @@ solveNakedPairs :: Puzzle -> [Transformer]
 solveNakedPairs puz = perHouseSolver puz searchNakedPair
 
 searchNakedPair :: Puzzle -> (Cell -> Bool) -> [Transformer]
-searchNakedPair puz p = map removerFor $ findNakedPairs house
+searchNakedPair puz p = map removerFor pairInds
     where house = take 9 $ filter p puz
-          removerFor pair = applyWhen (\c -> p c && candidates c /= pair) (removeCellCandidates pair)
+          indicesToUpdate pair = map (\c -> (pair, index c)) $ filter (\c -> candidates c /= pair && hasAnyCand pair c) house
+          pairInds = concatMap indicesToUpdate $ findNakedPairs house
+          removerFor pairind = applyWhen ((==snd pairind) . index) (removeCellCandidates $ fst pairind)
 
 {- | findNakedPairs returns pairs appearing twice in a house.
 
