@@ -85,7 +85,8 @@ findHiddenPairs cells = posCands
     where candMap = candidatePosMap cells
           uniquePositions = unique $ IntMap.elems $ IntMap.filter hasTwo candMap
           candsWithPos pos = IntMap.keys $ IntMap.filter (== pos) candMap
-          posCands = [(pos, candsWithPos pos) | pos <- uniquePositions, hasTwo $ candsWithPos pos]
+          hasRemovals pos = any ((>2) . length . candidates) $ filter (\c -> index c `elem` pos) cells
+          posCands = [(pos, candsWithPos pos) | pos <- uniquePositions, hasTwo $ candsWithPos pos, hasRemovals pos]
 
 {- | Creates a map of candidates as keys and list of their positions as values.
 
