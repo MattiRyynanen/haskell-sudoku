@@ -1,6 +1,6 @@
-module SolverDefinitions where
+module Hudoku.SolverDefinitions where
 
-import Definitions ( Puzzle )
+import Hudoku.Definitions ( Puzzle )
 
 type Transformer = Puzzle -> Puzzle
 

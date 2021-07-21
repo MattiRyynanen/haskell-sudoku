@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 extra-source-files:  README.md
 
 library
-  exposed-modules:     Snippets, Definitions, SolverDefinitions, Printers, PerHouseSolvers, Solvers
+  exposed-modules:     Hudoku.Snippets, Hudoku.Definitions, Hudoku.SolverDefinitions, Hudoku.Printers, Hudoku.PerHouseSolvers, Hudoku.Solvers
   hs-source-dirs:      src
   build-depends:       base >= 4.7 && < 5, containers
   default-language:    Haskell2010

@@ -1,7 +1,7 @@
 import Test.DocTest
 
 docTestFiles :: [String]
-docTestFiles = map (\n -> "src/" ++ n ++ ".hs") fs
+docTestFiles = map (\n -> "src/Hudoku/" ++ n ++ ".hs") fs
     where fs = ["Definitions", "Snippets", "PerHouseSolvers"]
 
 main :: IO ()

@@ -1,6 +1,6 @@
 module SnippetsSpec (spec) where
 
-import Snippets
+import Hudoku.Snippets
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck

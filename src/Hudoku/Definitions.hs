@@ -1,6 +1,6 @@
-module Definitions where
+module Hudoku.Definitions where
 
-import Snippets ( hasOne, hasTwo, unique, allSame, elemInOrdered )
+import Hudoku.Snippets ( hasOne, hasTwo, unique, allSame, elemInOrdered )
 import Data.Char ( digitToInt )
 
 type Index = Int

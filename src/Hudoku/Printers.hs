@@ -1,4 +1,4 @@
-module Printers 
+module Hudoku.Printers 
 (
     showPuzzle,
     showSolutions,
@@ -8,9 +8,9 @@ where
 
 import Data.List (intercalate)
 import Data.Maybe
-import Definitions
-import Snippets
-import SolverDefinitions
+import Hudoku.Definitions
+import Hudoku.Snippets
+import Hudoku.SolverDefinitions
 
 showSolution :: Int -> SolutionStep -> String
 showSolution minLevel (SolverStep res prev solv) = concat [show solv, " Unsolved cells = ", unsolved, puzzleStr]
