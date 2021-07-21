@@ -1,7 +1,7 @@
 module PerHouseSolversSpec (spec) where
 
-import Definitions ( createCells )
-import PerHouseSolvers
+import Hudoku.Definitions ( createCells )
+import Hudoku.PerHouseSolvers
 import Test.Hspec
 
 import qualified Data.IntMap.Strict as IntMap

@@ -1,4 +1,4 @@
-module Snippets where
+module Hudoku.Snippets where
 
 import Data.List (nub)
 import qualified Data.Map.Strict as Map

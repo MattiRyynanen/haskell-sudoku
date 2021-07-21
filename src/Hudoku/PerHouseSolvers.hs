@@ -1,4 +1,4 @@
-module PerHouseSolvers
+module Hudoku.PerHouseSolvers
 (
     solveSingles,
     solveNakedPairs,
@@ -15,9 +15,9 @@ where
 import qualified Data.Map.Strict as Map
 import qualified Data.IntMap.Strict as IntMap
 
-import Snippets
-import Definitions
-import SolverDefinitions
+import Hudoku.Snippets
+import Hudoku.Definitions
+import Hudoku.SolverDefinitions
 
 perHouseSolver :: Puzzle -> (Puzzle -> (Cell -> Bool) -> [Transformer]) -> Puzzle
 perHouseSolver puz houseTransformer

@@ -1,12 +1,12 @@
-module Solvers where
+module Hudoku.Solvers where
 
 import Data.Maybe
 import Data.List (find)
 
-import Definitions
-import SolverDefinitions
-import Snippets
-import PerHouseSolvers
+import Hudoku.Definitions
+import Hudoku.SolverDefinitions
+import Hudoku.Snippets
+import Hudoku.PerHouseSolvers
 
 solvers :: [Solver]
 solvers = let s = Solver in [

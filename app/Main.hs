@@ -1,10 +1,11 @@
+module Main where
+
 import Data.Maybe
 import System.Environment
-
-import Definitions
-import Printers
-import Solvers
-import Snippets
+import Hudoku.Definitions
+import Hudoku.Printers
+import Hudoku.Solvers
+import Hudoku.Snippets
 
 type Program = [String] -> IO ()
 
